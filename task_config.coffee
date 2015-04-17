@@ -133,12 +133,11 @@ task_config =
     name: 'Pigeon'
     alias: 'p'
     command: ['lein', 'run']
-    start_message: "Starting Pigeon (#{'127.0.0.1:3200'.magenta}) with BAG_NAME=#{"pigeon-#{rally.get_schema_name}".cyan} and ALM_BAG_NAME=#{"alm-#{rally.get_schema_name}".cyan}."
+    start_message: "Starting Pigeon (#{'127.0.0.1:3200'.magenta}) with STACK=#{"#{rally.get_schema_name}".cyan}."
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
-      BAG_NAME: "pigeon-#{rally.get_schema_name}"
-      ALM_BAG_NAME: "alm-#{rally.get_schema_name}"
+      STACK: rally.get_schema_name
     wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
     callback: (data, env) ->
       [match, exception] = data
