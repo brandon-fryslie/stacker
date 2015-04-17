@@ -69,7 +69,7 @@ repl_lib.add_command
   name: 'health'
   help: 'healthchecks services'
   fn: (task) ->
-    timer = setInterval((-> console.log '.'), 300)
+    timer = setInterval((-> process.stdout.write ' . '), 300)
     child_process.exec './healthcheck', (error, stdout, stderr) ->
       clearInterval(timer)
       console.log stdout
