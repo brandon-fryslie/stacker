@@ -1,5 +1,6 @@
 rally = require './rally'
 {die} = require './util'
+repl_lib = require './repl'
 _ = require 'lodash'
 fs = require 'fs'
 
@@ -19,7 +20,7 @@ task_config =
       unless zookeeper_address
         die 'Error: could not find zookeeper address in: ', match
 
-      console.log 'Zookeeper Address:', zookeeper_address.magenta
+      repl_lib.print 'Zookeeper Address:', zookeeper_address.magenta
 
       new_env = _.assign {}, env, zookeeper_address: zookeeper_address
       new_env
@@ -112,9 +113,9 @@ task_config =
         stat = fs.lstatSync("#{process.env.WEBAPP_HOME}/node_modules/churro/node_modules/sombrero")
         msg += if stat.isSymbolicLink() then " with symlinked #{'sombrero'.cyan}" else ''
       catch e
-        console.log 'Could not find sombrero.  Try npm install'.yellow
+        repl_lib.print 'Could not find sombrero.  Try npm install'.yellow
     catch e
-      console.log 'Could not find churro.  Try npm install'.yellow
+      repl_lib.print 'Could not find churro.  Try npm install'.yellow
 
     name: 'ALM'
     alias: 'a'
@@ -171,8 +172,8 @@ task_config =
     start_message: 'test error'
     wait_for: /Peace in the middle east/
     callback: (a,b,c) ->
-      console.log 'error'
-      console.log a,b,c
+      repl_lib.print 'error'
+      repl_lib.print a,b,c
 
 module.exports =
   task_config

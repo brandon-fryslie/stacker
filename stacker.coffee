@@ -33,10 +33,6 @@ get_env = (obj) ->
 # globalish container for running processes
 PROCS = {}
 
-prefix_out = (prefix, str...) ->
-  str.splice(0,0,'stacker:'.bgWhite.black)
-  console.log.apply this, str
-
 ##########################################
 #  Process Status
 #
@@ -47,8 +43,8 @@ prefix_out = (prefix, str...) ->
 #  - Version #??
 ##########################################
 processes_running = ->
-  console.log "What's running".cyan
-  console.log if _.keys(PROCS).length
+  repl_lib.print "What's running".cyan
+  repl_lib.print if _.keys(PROCS).length
       ("#{k}\n" for k, v of PROCS).join('')
     else
       'Nothing!'.bold.cyan
@@ -72,11 +68,11 @@ repl_lib.add_command
     timer = setInterval((-> process.stdout.write ' . '), 300)
     child_process.exec './healthcheck', (error, stdout, stderr) ->
       clearInterval(timer)
-      console.log stdout
+      repl_lib.print stdout
       if stderr
-        console.log 'error'.red + stderr
+        repl_lib.print 'error'.red + stderr
 
-    console.log "Healthchecking #{task || 'all'}"
+    repl_lib.print "Healthchecking #{task || 'all'}"
 
 ##########################################
 #  whats-running
@@ -86,13 +82,13 @@ repl_lib.add_command
   name: 'whats-running'
   help: 'whats-running shell script'
   fn: (task) ->
-    timer = setInterval((-> prefix_out 'whats-running', '.'), 300)
-    prefix_out 'whats-running', '...'
+    timer = setInterval((-> repl_lib.print 'whats-running', '.'), 300)
+    repl_lib.print 'whats-running', '...'
     child_process.exec './whats-running', (error, stdout, stderr) ->
       clearInterval(timer)
-      prefix_out 'whats-running', line for line in stdout.split('\n')
+      repl_lib.print 'whats-running', line for line in stdout.split('\n')
       if stderr
-        console.log 'whats-running error'.red + stderr
+        repl_lib.print 'whats-running error'.red + stderr
 
 ##########################################
 #  nuke javas
@@ -104,7 +100,7 @@ repl_lib.add_command
   fn: (task) ->
     child_process.exec 'killall -9 java', (error, stdout, stderr) ->
     PROCS = {}
-    console.log 'Nuking All Javas!'.magenta
+    repl_lib.print 'Nuking All Javas!'.magenta
 
 ##########################################
 #  Set
@@ -128,14 +124,14 @@ repl_lib.add_command
 #   zk-address
 #   burro-address
 #   """
-#   fn: (variable, value) -> console.log "setting '#{variable}' to '#{value}'"
+#   fn: (variable, value) -> repl_lib.print "setting '#{variable}' to '#{value}'"
 
 ##########################################
 #  Repl Help
 ##########################################
 repl_help = (args) ->
-  console.log 'available commands'.cyan.bold
-  console.log ("#{name.cyan}:\t#{help}" for {name, help} in repl_lib.get_commands()).join '\n'
+  repl_lib.print 'available commands'.cyan.bold
+  repl_lib.print ("#{name.cyan}:\t#{help}" for {name, help} in repl_lib.get_commands()).join '\n'
 
 repl_lib.add_command
   name: 'help'
@@ -197,7 +193,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
     env = get_opts_for_task(task_name, env)
 
     if env.start_message
-      console.log '\n' + env.start_message.yellow, 'Doing ', "[ #{env.command.join(' ')} ]".green
+      repl_lib.print env.start_message.yellow, 'Doing ', "[ #{env.command.join(' ')} ]".green
 
     proc = nexpect.spawn(env.command, [],
       stream: 'all'
@@ -209,13 +205,13 @@ start_task = (task_name, env=CURRENT_ENV) ->
       try
         CURRENT_ENV = env.callback data, env
         deferred.resolve CURRENT_ENV
-        console.log "Started #{env.name}!".green
+        repl_lib.print "Started #{env.name}!".green
       catch e
-        console.log "Failed to start #{env.name}!".bold.red
+        repl_lib.print "Failed to start #{env.name}!".bold.red
 
     proc = proc.run (err) ->
       if err
-        console.log ("Error running task #{task_name}: " + (err.message ? err)).red
+        repl_lib.print ("Error running task #{task_name}: " + (err.message ? err)).red
         kill_tree PROCS[task_name]
         delete PROCS[task_name]
 
@@ -250,21 +246,21 @@ kill_task = (task) ->
 
   proc = PROCS[task]
   if proc
-    proc.on 'error', (a,b,c) -> console.log "error sending signal to #{task.cyan}",a,b,c
+    proc.on 'error', (a,b,c) -> repl_lib.print "error sending signal to #{task.cyan}",a,b,c
     proc.on 'close', (code, signal) ->
-      console.log "Killed #{task.cyan}:", signal
+      repl_lib.print "Killed #{task.cyan}:", signal
       delete PROCS[task]
       deferred.resolve()
     kill_tree proc.pid
-    console.log "Killing #{task.red}..."
+    repl_lib.print "Killing #{task.red}..."
     deferred.promise
   else
-    console.log "No proc matching '#{task.cyan}' found"
+    repl_lib.print "No proc matching '#{task.cyan}' found"
     deferred.resolve()
 
 
 kill_running_tasks = ->
-  console.log "Killing all tasks..."
+  repl_lib.print "Killing all tasks..."
   Q.all _(PROCS).keys().map(kill_task).value()
 
 repl_lib.add_command
@@ -296,7 +292,7 @@ run_tasks = (tasks, initial_env=CURRENT_ENV) ->
 
   final.then ->
     if tasks.length > 0
-      console.log 'Started all tasks!'.bold.green
+      repl_lib.print 'Started all tasks!'.bold.green
 
 repl_lib.add_command
   name: 'run'
@@ -312,11 +308,11 @@ repl_lib.add_command
 ##########################################
 
 boot_stack = (tasks) ->
-  console.log 'VERBOSE MODE'.red if CURRENT_ENV.verbose
+  repl_lib.print 'VERBOSE MODE'.red if CURRENT_ENV.verbose
   if tasks.length > 0
-    console.log 'running tasks:', tasks.join(' ').cyan
+    repl_lib.print 'running tasks:', tasks.join(' ').cyan
   else
-    console.log 'Starting REPL'.bold.green
+    repl_lib.print 'Starting REPL'.bold.green
 
   repl = repl_lib.start()
 
@@ -326,7 +322,7 @@ boot_stack = (tasks) ->
     _.delay process.exit, 4000
 
     kill_running_tasks().then ->
-      console.log 'killed running tasks'
+      repl_lib.print 'killed running tasks'
 
       t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split(' ')
       _.map words, (word) ->

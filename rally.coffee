@@ -1,6 +1,7 @@
 _ = require 'lodash'
 fs = require 'fs'
 require 'colors'
+repl_lib = require './repl'
 util = require './util'
 
 # Constants
@@ -17,7 +18,7 @@ get_schema_name = ->
     groovy_file = fs.readFileSync "#{process.env.HOME}/.gradle/alm.groovy", 'utf8'
     groovy_schema_name = util.regex_extract /System\.env\.DB_NAME \?: '([^']+)'/, groovy_file
   catch e
-    console.log "Did not find file #{"#{process.env.HOME}/.gradle/alm.groovy"}\n".yellow
+    repl_lib.print "Did not find file #{"#{process.env.HOME}/.gradle/alm.groovy"}\n".yellow
 
   # Get schema name from .m2/settings.xml
   try
@@ -25,7 +26,7 @@ get_schema_name = ->
     active_profile = util.regex_extract /\<activeProfile\>([^<]+)<\/activeProfile>/, m2_file
     m2_schema_name = util.regex_extract ///<id>#{active_profile}</id>[\s\S]*?<dbname>([^<]+)</dbname>///, m2_file
   catch e
-    console.log "Did not find file #{"#{process.env.HOME}/.m2/settings.xml"}".yellow
+    repl_lib.print "Did not find file #{"#{process.env.HOME}/.m2/settings.xml"}".yellow
 
   if not groovy_file and not m2_file
     util.die 'Error: Could not find either groovy file or m2 file'
@@ -41,7 +42,7 @@ get_schema_name = ->
   if "#{schema_name}".length < 1
     util.die 'Error: schema name is empty'
 
-  console.log "Found schema: #{schema_name.blue.bold}"
+  repl_lib.print "Found schema: #{schema_name.blue.bold}"
 
   schema_name
 

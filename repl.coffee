@@ -43,7 +43,7 @@ replDefaults =
     if command
       command.fn.apply this, args
     else
-      console.log 'not a command:', command_name
+      repl_print 'not a command:', command_name
 
     cb()
 
@@ -104,12 +104,16 @@ patch_repl_tab_complete = (repl) ->
     ).value()
 
     if completions.length > 1
-      console.log completions.join('  ')
+      repl_print completions.join('  ')
       idx = if idx >= completions.length then 0 else idx
       completions = [completions[idx++]]
 
     if completions.length > 0
       callback(null, [completions, line])
+
+repl_print = (str...) ->
+  str.splice(0,0,'stacker:'.bgWhite.black)
+  console.log.apply this, str
 
 module.exports =
   add_command: (command) ->
@@ -120,6 +124,8 @@ module.exports =
   add_alias: (alias) -> _.merge(ALIAS, alias)
 
   get_commands: -> COMMANDS
+
+  print: repl_print
 
   start: (opts = {}) ->
     [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n)
