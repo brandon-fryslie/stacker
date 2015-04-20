@@ -94,7 +94,7 @@ getCommandId = (repl, commandName) ->
   commandsHaveLeadingDot = repl.commands['.help']?
   if commandsHaveLeadingDot then ".#{commandName}" else commandName
 
-patch_complete = (repl) ->
+patch_repl_tab_complete = (repl) ->
   idx = 0
   repl.complete = (line, callback) ->
     line = line.replace(/^\s|\s$/g, '')
@@ -132,7 +132,7 @@ module.exports =
     repl = nodeREPL.start opts
     REPL = repl
 
-    patch_complete repl
+    patch_repl_tab_complete repl
 
     setup_keybindings repl
     addHistory repl, opts.historyFile, opts.historyMaxInputSize if opts.historyFile

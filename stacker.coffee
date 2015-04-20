@@ -159,17 +159,42 @@ clrs = [
 clr_idx = 0
 get_color_fn = -> clrs[clr_idx++ % clrs.length]
 
-start_task = (task, env=CURRENT_ENV) ->
+# stream transform
+stream = require 'stream'
+create_stream_transformer = (output_color_fn, task) ->
+  liner = new stream.Transform()
+  liner._transform = (chunk, encoding, done) ->
+    data = chunk.toString()
+    if @_lastLineData
+      data = @_lastLineData + data
+
+    lines = data.split('\n')
+    @_lastLineData = lines.pop()
+
+    for line in lines
+      @push output_color_fn("#{task}:") + ' ' + line + '\n'
+
+    done()
+
+  liner._flush = (done) ->
+    if @_lastLineData?
+      @push @_lastLineData
+    @_lastLineData = null
+    done()
+
+  liner
+
+start_task = (task_name, env=CURRENT_ENV) ->
     deferred = Q.defer()
 
-    unless task
+    unless task_name
       return Q()
 
-    unless TASK_CONFIG[task]?
-      util.log_error "Task does not exist: #{task}"
+    unless TASK_CONFIG[task_name]?
+      util.log_error "Task does not exist: #{task_name}"
       return Q()
 
-    env = get_opts_for_task(task, env)
+    env = get_opts_for_task(task_name, env)
 
     if env.start_message
       console.log '\n' + env.start_message.yellow, 'Doing ', "[ #{env.command.join(' ')} ]".green
@@ -190,28 +215,21 @@ start_task = (task, env=CURRENT_ENV) ->
 
     proc = proc.run (err) ->
       if err
-        console.log ("Error running task #{task}: " + (err.message ? err)).red
-        kill_tree PROCS[task]
-        delete PROCS[task]
+        console.log ("Error running task #{task_name}: " + (err.message ? err)).red
+        kill_tree PROCS[task_name]
+        delete PROCS[task_name]
 
     output_color_fn = get_color_fn()
-    initial_print = true
-    stream_printer = (data) ->
-      if initial_print
-        process.stdout.write(output_color_fn("#{task}:") + ' ')
-        initial_print = false
+    # initial_print = true
 
-      data = "#{data}".replace(/(\n)/g, '$1' + output_color_fn("#{task}:") + ' ').replace(/(\r)/g, '$1' + output_color_fn("#{task}:" + ' '))
-      process.stdout.write(data)
-
-    add_stream_printer = (process) ->
-      process.stdout.on('data', stream_printer)
-      process.stderr.on('data', stream_printer)
+    pipe_output = (task_proc) ->
+      task_proc.stdout.pipe(create_stream_transformer(output_color_fn, task_name)).pipe(process.stdout)
+      task_proc.stderr.pipe(create_stream_transformer(output_color_fn, task_name)).pipe(process.stderr)
 
     unless env.quiet
-      add_stream_printer(proc)
+      pipe_output(proc)
 
-    PROCS[task] = proc
+    PROCS[task_name] = proc
 
     deferred.promise
 
