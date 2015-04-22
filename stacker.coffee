@@ -204,7 +204,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     repl_lib.print "Starting #{task_name.cyan}".yellow
 
-    repl_lib.print '$>'.gray.bold, (k.blue.bold+'='.gray+v.magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
+    repl_lib.print '$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
 
     if env.start_message
       repl_lib.print env.start_message

@@ -96,7 +96,7 @@ task_config =
     if env.with_local_burro
       additional_env['BURRO_URL'] = env.burro_address
 
-    msg = "#{'127.0.0.1:7001'.magenta}"
+    msg = "on #{'127.0.0.1:7001'.magenta}"
 
     # check for symlinked churro + sombrero
     try
