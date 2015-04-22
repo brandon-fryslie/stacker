@@ -14,14 +14,22 @@ child_process = require 'child_process'
 # set verbose on and off for a process
 # check if everything is set up
 
+##########################################
+# Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
+##########################################
+CURRENT_ENV = {}
+set_env = (initial_env) -> CURRENT_ENV = initial_env
+
+##########################################
+# Configuration of task configs and aliass
+##########################################
 TASK_CONFIG = {}
 TASK_ALIAS_MAP = {}
 register_task_config = (task_config) ->
-  TASK_ALIAS_MAP[alias] = name for {alias, name} in task_config
+  for task_name, config of task_config
+    {alias} = config(CURRENT_ENV)
+    TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
-
-CURRENT_ENV = {}
-set_env = (initial_env) -> CURRENT_ENV = initial_env
 
 get_opts_for_task = (task, env) ->
   util.clone_apply env, TASK_CONFIG[task](env)
@@ -186,6 +194,8 @@ start_task = (task_name, env=CURRENT_ENV) ->
     unless task_name
       return Q()
 
+    task_name = resolve_task_name task_name
+
     unless TASK_CONFIG[task_name]?
       util.log_error "Task does not exist: #{task_name}"
       return Q()
@@ -244,6 +254,8 @@ kill_tree = (pid, signal='SIGKILL') ->
 kill_task = (task) ->
   deferred = Q.defer()
 
+  task = resolve_task_name task
+
   proc = PROCS[task]
   if proc
     proc.on 'error', (a,b,c) -> repl_lib.print "error sending signal to #{task.cyan}",a,b,c
@@ -253,11 +265,11 @@ kill_task = (task) ->
       deferred.resolve()
     kill_tree proc.pid
     repl_lib.print "Killing #{task.red}..."
-    deferred.promise
   else
     repl_lib.print "No proc matching '#{task.cyan}' found"
     deferred.resolve()
 
+  deferred.promise
 
 kill_running_tasks = ->
   repl_lib.print "Killing all tasks..."
@@ -268,6 +280,18 @@ repl_lib.add_command
   alias: 'k'
   help:'usage: kill [TASK]\n\tkill a task\n\talias: k'
   fn: kill_task
+
+##########################################
+#  Restart Task
+##########################################
+repl_lib.add_command
+  name: 'restart'
+  alias: 'rs'
+  help: 'usage: restart [TASK]\n\trestart a task\n\talias: k'
+  fn: (task) ->
+    repl_lib.print "Restarting #{task}..."
+    kill_task(task).then (a,b,c) ->
+      start_task(task)
 
 ##########################################
 #  Run Tasks
@@ -282,8 +306,7 @@ resolve_task_name = (task) -> TASK_ALIAS_MAP[task] ? task
 run_tasks = (tasks, initial_env=CURRENT_ENV) ->
   final = tasks.reduce (previous, task) ->
     previous.then((env) ->
-      task_name = resolve_task_name task
-      start_task(task_name, env)
+      start_task(task, env)
     , (error) ->
       util.error 'Error handler:', error.stack
     ).fail (error) ->
