@@ -163,20 +163,20 @@ clrs = [
 clr_idx = 0
 get_color_fn = -> clrs[clr_idx++ % clrs.length]
 
-# stream transform
+# stream transformer prefixes each line w/ prefix
 stream = require 'stream'
-create_stream_transformer = (output_color_fn, task) ->
+create_stream_transformer = (prefix) ->
   liner = new stream.Transform()
   liner._transform = (chunk, encoding, done) ->
     data = chunk.toString()
-    if @_lastLineData
+    if @_lastLineData?
       data = @_lastLineData + data
 
     lines = data.split('\n')
     @_lastLineData = lines.pop()
 
     for line in lines
-      @push output_color_fn("#{task}:") + ' ' + line + '\n'
+      @push "#{prefix} #{line}\n"
 
     done()
 
@@ -202,8 +202,12 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     env = get_opts_for_task(task_name, env)
 
+    repl_lib.print "Starting #{task_name.cyan}".yellow
+
+    repl_lib.print '$>'.gray.bold, (k.blue.bold+'='.gray+v.magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
+
     if env.start_message
-      repl_lib.print env.start_message.yellow, 'Doing ', "[ #{env.command.join(' ')} ]".green
+      repl_lib.print env.start_message
 
     proc = nexpect.spawn(env.command, [],
       stream: 'all'
@@ -225,12 +229,10 @@ start_task = (task_name, env=CURRENT_ENV) ->
         kill_tree PROCS[task_name]
         delete PROCS[task_name]
 
-    output_color_fn = get_color_fn()
-    # initial_print = true
-
+    prefix = get_color_fn()("#{task_name}:")
     pipe_output = (task_proc) ->
-      task_proc.stdout.pipe(create_stream_transformer(output_color_fn, task_name)).pipe(process.stdout)
-      task_proc.stderr.pipe(create_stream_transformer(output_color_fn, task_name)).pipe(process.stderr)
+      task_proc.stdout.pipe(create_stream_transformer(prefix)).pipe(process.stdout)
+      task_proc.stderr.pipe(create_stream_transformer(prefix)).pipe(process.stderr)
 
     unless env.quiet
       pipe_output(proc)

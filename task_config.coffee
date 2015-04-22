@@ -9,7 +9,6 @@ task_config =
     name: 'Marshmallow'
     alias: 'm'
     command: ['lein', 'start-infrastructure']
-    start_message: 'Starting Marshmallow.'
     cwd: "#{rally.ROOTDIR}/marshmallow"
     wait_for:  /ZOOKEEPER INIT:\s*([\w:]+)|(Connection timed out)/
     callback: (data, env) ->
@@ -29,7 +28,7 @@ task_config =
     name: 'Zuul'
     alias: 'z'
     command: ['lein', 'run']
-    start_message: "Starting Zuul (#{'127.0.0.1:3000'.magenta}) with zk address #{env.zookeeper_address.magenta} and ZUUL_TENANT_OVERRIDE #{rally.get_schema_name.cyan}."
+    start_message: "on #{'127.0.0.1:3000'.magenta}"
     cwd: "#{rally.ROOTDIR}/zuul"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
@@ -45,9 +44,9 @@ task_config =
     name: 'Bag Boy'
     alias: 'bb'
     command: ['lein', 'run']
-    start_message: "Starting Bagboy with zk address #{env.zookeeper_address.magenta}."
     cwd: "#{rally.ROOTDIR}/bag-boy"
-    additional_env: ZOOKEEPER_CONNECT: env.zookeeper_address
+    additional_env:
+      ZOOKEEPER_CONNECT: env.zookeeper_address
     wait_for: /\|-BAG BOY-\||(Connection timed out)/
     callback: (data, env) ->
       [match, timeout_error] = data
@@ -59,7 +58,6 @@ task_config =
     name: 'Birdseed'
     alias: 'bs'
     command: ['lein', 'run']
-    start_message: "Starting Birdseed with zk address #{env.zookeeper_address.magenta} and schema name #{rally.get_schema_name.cyan}."
     cwd: "#{rally.ROOTDIR}/birdseed"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
@@ -98,12 +96,7 @@ task_config =
     if env.with_local_burro
       additional_env['BURRO_URL'] = env.burro_address
 
-    msg = "Starting ALM (#{'127.0.0.1:7001'.magenta})"
-    msg += if env.zookeeper_address then ' with zk address ' + env.zookeeper_address.magenta else ''
-    msg += if env.with_local_appsdk then " with local #{'appsdk'.cyan}" else ''
-    msg += if env.with_local_app_catalog then " with local #{'app catalog'.cyan}" else ''
-    msg += if env.with_local_burro then " with local #{'burro'.cyan} at #{env.burro_address.magenta}" else ''
-    msg += if env.with_local_churro then " with local #{'churro'.cyan}" else ''
+    msg = "#{'127.0.0.1:7001'.magenta}"
 
     # check for symlinked churro + sombrero
     try
@@ -120,7 +113,7 @@ task_config =
     name: 'ALM'
     alias: 'a'
     command: command
-    start_message: "#{msg}."
+    start_message: msg
     cwd: process.env.WEBAPP_HOME
     additional_env: additional_env ? {}
     wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
@@ -134,7 +127,7 @@ task_config =
     name: 'Pigeon'
     alias: 'p'
     command: ['lein', 'run']
-    start_message: "Starting Pigeon (#{'127.0.0.1:3200'.magenta}) with STACK=#{"#{rally.get_schema_name}".cyan}."
+    start_message: "on #{'127.0.0.1:3200'.magenta}"
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
@@ -152,7 +145,7 @@ task_config =
     name: 'Burro'
     alias: 'b'
     command: command
-    start_message: "Starting Burro (#{'127.0.0.1:8855'.magenta})#{if env.with_local_churro then " with local #{'churro'.cyan}" else ''}."
+    start_message: "on #{'127.0.0.1:8855'.magenta}#{if env.with_local_churro then " with local #{'churro'.cyan}" else ''}."
     cwd: "#{rally.ROOTDIR}/burro"
     wait_for: /Server running at: http:\/\/([\w.:]+)/
     callback: (data, env) ->

@@ -112,7 +112,12 @@ patch_repl_tab_complete = (repl) ->
       callback(null, [completions, line])
 
 repl_print = (str...) ->
-  str.splice(0,0,'stacker:'.bgWhite.black)
+  prefix = 'stacker:'.bgWhite.black
+  str.splice 0, 0, prefix
+
+  str = for s in str
+    s.split('\n').join("\n#{prefix} ")
+
   console.log.apply this, str
 
 module.exports =

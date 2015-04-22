@@ -42,7 +42,7 @@ get_schema_name = ->
   if "#{schema_name}".length < 1
     util.die 'Error: schema name is empty'
 
-  repl_lib.print "Found schema: #{schema_name.blue.bold}"
+  repl_lib.print "Found schema: #{schema_name.magenta}"
 
   schema_name
 
