@@ -18,7 +18,10 @@ child_process = require 'child_process'
 # Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
 ##########################################
 CURRENT_ENV = {}
-set_env = (initial_env) -> CURRENT_ENV = initial_env
+SET_ENV = (env) ->
+  unless env?
+    throw new Error "You shouldn't null out the ENV.  Make sure to return ENV from your task handlers"
+  CURRENT_ENV = env
 
 ##########################################
 # Configuration of task configs and aliass
@@ -183,7 +186,7 @@ create_stream_transformer = (prefix) ->
   liner._flush = (done) ->
     if @_lastLineData?
       @push @_lastLineData
-    @_lastLineData = null
+      @_lastLineData = null
     done()
 
   liner
@@ -209,6 +212,8 @@ start_task = (task_name, env=CURRENT_ENV) ->
     if env.start_message
       repl_lib.print env.start_message
 
+    callback = env.callback ? (_, env) -> env
+
     proc = nexpect.spawn(env.command, [],
       stream: 'all'
       verbose: false
@@ -217,11 +222,11 @@ start_task = (task_name, env=CURRENT_ENV) ->
     .wait env.wait_for, (data) ->
       data = env.wait_for.exec?(data) ? [data]
       try
-        CURRENT_ENV = env.callback data, env
+        SET_ENV callback data, env
         deferred.resolve CURRENT_ENV
         repl_lib.print "Started #{env.name}!".green
       catch e
-        repl_lib.print "Failed to start #{env.name}!".bold.red
+        repl_lib.print "Failed to start #{env.name}!".bold.red, e
 
     proc = proc.run (err) ->
       if err
@@ -234,7 +239,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
       task_proc.stdout.pipe(create_stream_transformer(prefix)).pipe(process.stdout)
       task_proc.stderr.pipe(create_stream_transformer(prefix)).pipe(process.stderr)
 
-    unless env.quiet
+    if env.verbose
       pipe_output(proc)
 
     PROCS[task_name] = proc
@@ -289,10 +294,10 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'restart'
   alias: 'rs'
-  help: 'usage: restart [TASK]\n\trestart a task\n\talias: k'
+  help: 'usage: restart [TASK]\n\trestart a task\n\talias: rs'
   fn: (task) ->
     repl_lib.print "Restarting #{task}..."
-    kill_task(task).then (a,b,c) ->
+    kill_task(task).then ->
       start_task(task)
 
 ##########################################
@@ -325,6 +330,36 @@ repl_lib.add_command
   help: 'usage: run [TASKS]\n\tstart multiple tasks\n\talias: r'
   fn: (tasks...) ->
     run_tasks tasks
+
+##########################################
+# REPL ENV
+#
+# Print information about your environment
+##########################################
+repl_lib.add_command
+  name: 'env'
+  alias: 'e'
+  help: 'usage: env\n\tprint information about your environment\n\talias: e'
+  fn: ->
+    repl_lib.print 'ENV'.cyan.bold
+    repl_lib.print ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of CURRENT_ENV).join('\n')
+
+repl_lib.add_command
+  name: 'set'
+  alias: 's'
+  help: 'usage: set [KEY] [VALUE]\n\tset environment variable\n\talias: s'
+  fn: (k='', v='') ->
+    unless k.length > 0 and v.length > 0
+      repl_lib.print this.help.split('\n')[0]
+      return
+
+    repl_lib.print 'setting'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
+
+    v = if v is 'false' then false else v
+    v = if v is 'true'  then true  else v
+
+    CURRENT_ENV[k] = v
+
 
 ##########################################
 # boot stack
@@ -362,4 +397,4 @@ module.exports =
   run_tasks: run_tasks
   boot: boot_stack
   register_task_config: register_task_config
-  set_env: set_env
+  set_env: SET_ENV

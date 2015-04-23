@@ -7,6 +7,7 @@ util = require './util'
 # Constants
 ROOTDIR = "#{process.env.HOME}/projects"
 DEFAULT_BURRO_ADDRESS = 'http://localhost:8855'
+BLD_ZOOKEEPER_ADDRESS = 'bld-zookeeper-01:2181,bld-zookeeper-02:2181,bld-zookeeper-03:2181'
 
 WARNINGS = []
 
@@ -75,3 +76,4 @@ module.exports =
   resolve_task_name: resolve_task_name
   ROOTDIR: ROOTDIR
   DEFAULT_BURRO_ADDRESS: DEFAULT_BURRO_ADDRESS
+  BLD_ZOOKEEPER_ADDRESS: BLD_ZOOKEEPER_ADDRESS

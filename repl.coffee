@@ -41,7 +41,7 @@ replDefaults =
 
     command = _.find COMMANDS, name: command_name
     if command
-      command.fn.apply this, args
+      command.fn.apply command, args
     else
       repl_print 'not a command:', command_name
 
@@ -116,7 +116,7 @@ repl_print = (str...) ->
   str.splice 0, 0, prefix
 
   str = for s in str
-    s.split('\n').join("\n#{prefix} ")
+    "#{s}".split('\n').join("\n#{prefix} ")
 
   console.log.apply this, str
 

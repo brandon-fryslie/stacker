@@ -158,7 +158,6 @@ task_config =
     command: ['tail', '-n20', '-f', 'stacker/task_config.coffee']
     start_message: 'test read'
     wait_for: /The Words You Are Reading Right Now!/
-    callback: (a,b,c) ->
 
   error: (env) ->
     name: 'Error'
