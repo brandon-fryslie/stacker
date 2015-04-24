@@ -1,4 +1,5 @@
 fs = require 'fs'
+rl = require 'readline'
 path = require 'path'
 vm = require 'vm'
 nodeREPL = require 'repl'
@@ -111,14 +112,26 @@ patch_repl_tab_complete = (repl) ->
     if completions.length > 0
       callback(null, [completions, line])
 
-repl_print = (str...) ->
-  prefix = 'stacker:'.bgWhite.black
+prefix_print = (prefix, str...) ->
   str.splice 0, 0, prefix
 
   str = for s in str
     "#{s}".split('\n').join("\n#{prefix} ")
 
-  console.log.apply this, str
+  console.log.apply @, str
+
+repl_print = (str...) ->
+  str.unshift 'stacker:'.bgWhite.black
+  prefix_print.apply @, str
+
+start_progress_indicator = ->
+  fn = ->
+    rl.clearLine process.stdout, 0
+    process.stdout.write ' . '
+
+  timer = setInterval fn, 300
+
+  -> clearInterval timer
 
 module.exports =
   add_command: (command) ->
@@ -131,6 +144,8 @@ module.exports =
   get_commands: -> COMMANDS
 
   print: repl_print
+  prefix_print: prefix_print
+  start_progress_indicator: start_progress_indicator
 
   start: (opts = {}) ->
     [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n)

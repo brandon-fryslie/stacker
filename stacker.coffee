@@ -8,12 +8,6 @@ repl_lib = require './repl'
 util = require './util'
 child_process = require 'child_process'
 
-{exec} = require 'child_process'
-
-# Commands TODO
-# set verbose on and off for a process
-# check if everything is set up
-
 ##########################################
 # Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
 ##########################################
@@ -44,9 +38,13 @@ register_task_config = (task_config) ->
 get_opts_for_task = (task, env) ->
   util.clone_apply env, TASK_CONFIG[task](env)
 
-get_env = (obj) ->
+GET_ENV = (obj) ->
   env = _.assign {}, process.env, JAVA_HOME: process.env.JAVA8_HOME
   _.assign {}, env, obj
+
+# read a property from a task
+read_task_property = (task, property) ->
+  TASK_CONFIG[task](CURRENT_ENV)[property]
 
 # globalish container for running processes
 PROCS = {}
@@ -100,7 +98,6 @@ repl_lib.add_command
   name: 'whats-running'
   help: 'whats-running shell script'
   fn: (task) ->
-    timer = setInterval((-> repl_lib.print 'whats-running', '.'), 300)
     repl_lib.print 'whats-running', '...'
     child_process.exec './whats-running', (error, stdout, stderr) ->
       clearInterval(timer)
@@ -119,30 +116,6 @@ repl_lib.add_command
     child_process.exec 'killall -9 java', (error, stdout, stderr) ->
     PROCS = {}
     repl_lib.print 'Nuking All Javas!'.magenta
-
-##########################################
-#  Set
-#
-# TODO
-#
-#  Set environment variables
-#  available options:
-#    verbose [true/false]
-#    zk-address
-#    burro-address
-##########################################
-# repl_lib.add_command
-#   name: 'set'
-#   help: """
-# set an an environment variable value
-# #{'NOT IMPLEMENTED'.red}
-# usage: set [VARIABLE] [VALUE]
-# available options:
-#   verbose [true/false]
-#   zk-address
-#   burro-address
-#   """
-#   fn: (variable, value) -> repl_lib.print "setting '#{variable}' to '#{value}'"
 
 ##########################################
 #  Repl Help
@@ -185,11 +158,10 @@ start_task = (task_name, env=CURRENT_ENV) ->
     callback = env.callback ? (_, env) -> env
 
     proc = nexpect.spawn(env.command, [],
-      stream: 'all'
       verbose: false
-      env: get_env env.additional_env
-      cwd: env.cwd ? require.main.filename.replace(/\/[\w-_]+$/, ''))
-    .wait env.wait_for, (data) ->
+      env: GET_ENV env.additional_env
+      cwd: env.cwd ? require.main.filename.replace(/\/[\w-_]+$/, '')
+    ).wait env.wait_for, (data) ->
       data = env.wait_for.exec?(data) ? [data]
       try
         SET_ENV callback data, env
@@ -338,16 +310,48 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'tell'
   alias: 't'
-  help: 'usage: tell [TASK] [COMMAND]\n\ttell someone to do something (e.g. tell alm grunt clean build)\n\talias: t'
-  fn: (target, cmd...) ->
+  help: [
+      'usage: tell [TASK] [COMMAND]'
+      'tell someone to do something (e.g. tell alm grunt clean build)'
+      'important note: things like && and | (pipe) ' + 'WILL NOT WORK!'.yellow.bold
+      'alias: t'
+    ].join('\n\t')
+  fn: (target, cmd, args...) ->
+    path = read_task_property target, 'cwd'
+    opts =
+      cwd: path
+      env: GET_ENV()
 
-    util.pipe_with_prefix ''
+    child = child_process.spawn cmd, args, opts
+    child_id = "#{target}-#{cmd}#{if args.length > 0 then "-#{args.join('-')}" else ''}-#{child.pid}"
 
-    console.log 'doing tell', target
-    console.log 'cmd', cmd
+    stop_indicator = repl_lib.start_progress_indicator()
 
-    # get cwd
-    # exec in that cwd
+    data_callback = _.once ->
+      process.stdout.write '\n'
+      stop_indicator()
+
+    child.stdout.on 'readable', data_callback
+    child.stdout.on 'data', data_callback
+    child.stderr.on 'readable', data_callback
+    child.stderr.on 'data', data_callback
+
+    child.on 'close', (exit_code, signal) ->
+      delete PROCS[child_id]
+      status = switch
+        when exit_code is 0 then 'exited successfully'.green
+        when exit_code? then "exited with code #{exit_code}"
+        when signal? then "exited with signal #{signal}"
+        else 'no exit code and no signal - should investigate'
+
+      repl_lib.print child_id.cyan, status
+
+    PROCS[child_id] = child
+
+    repl_lib.print '$>'.gray, "#{'cd'.green} #{path.cyan}#{';'.green}", "#{cmd} #{args.join ' '}".green
+    prefix = util.get_color_fn()("#{child_id} $>")
+    util.pipe_with_prefix prefix, child.stdout, process.stdout
+    util.pipe_with_prefix prefix, child.stderr, process.stderr
 
 ##########################################
 # boot stack
