@@ -21,6 +21,13 @@ CURRENT_ENV = {}
 SET_ENV = (env) ->
   unless env?
     throw new Error "You shouldn't null out the ENV.  Make sure to return ENV from your task handlers"
+
+  env = _.cloneDeep env
+
+  # dont save the state of some properties
+  for p in ['start_message', 'name', 'alias', 'command', 'wait_for']
+    delete env[p]
+
   CURRENT_ENV = env
 
 ##########################################
@@ -153,44 +160,7 @@ repl_lib.add_command
 ##########################################
 #  Start one task
 #  Returns a promise
-##########################################)
-
-clrs = [
-  ((s) -> s.bgMagenta.black),
-  ((s) -> s.bgCyan.black),
-  ((s) -> s.bgGreen.black),
-  ((s) -> s.bgBlue),
-  ((s) -> s.bgYellow.black),
-  ((s) -> s.bgRed),
-]
-clr_idx = 0
-get_color_fn = -> clrs[clr_idx++ % clrs.length]
-
-# stream transformer prefixes each line w/ prefix
-stream = require 'stream'
-create_stream_transformer = (prefix) ->
-  liner = new stream.Transform()
-  liner._transform = (chunk, encoding, done) ->
-    data = chunk.toString()
-    if @_lastLineData?
-      data = @_lastLineData + data
-
-    lines = data.split('\n')
-    @_lastLineData = lines.pop()
-
-    for line in lines
-      @push "#{prefix} #{line}\n"
-
-    done()
-
-  liner._flush = (done) ->
-    if @_lastLineData?
-      @push @_lastLineData
-      @_lastLineData = null
-    done()
-
-  liner
-
+##########################################
 start_task = (task_name, env=CURRENT_ENV) ->
     deferred = Q.defer()
 
@@ -234,13 +204,13 @@ start_task = (task_name, env=CURRENT_ENV) ->
         kill_tree PROCS[task_name]
         delete PROCS[task_name]
 
-    prefix = get_color_fn()("#{task_name}:")
-    pipe_output = (task_proc) ->
-      task_proc.stdout.pipe(create_stream_transformer(prefix)).pipe(process.stdout)
-      task_proc.stderr.pipe(create_stream_transformer(prefix)).pipe(process.stderr)
+    pipe_to_std_streams = (task_proc, prefix) ->
+      prefix = util.get_color_fn()("#{prefix}:")
+      util.pipe_with_prefix prefix, task_proc.stdout, process.stdout
+      util.pipe_with_prefix prefix, task_proc.stderr, process.stderr
 
     if env.verbose
-      pipe_output(proc)
+      pipe_to_std_streams proc, task_name
 
     PROCS[task_name] = proc
 
@@ -360,6 +330,24 @@ repl_lib.add_command
 
     CURRENT_ENV[k] = v
 
+##########################################
+# REPL TELL
+#
+# Print information about your environment
+##########################################
+repl_lib.add_command
+  name: 'tell'
+  alias: 't'
+  help: 'usage: tell [TASK] [COMMAND]\n\ttell someone to do something (e.g. tell alm grunt clean build)\n\talias: t'
+  fn: (target, cmd...) ->
+
+    util.pipe_with_prefix ''
+
+    console.log 'doing tell', target
+    console.log 'cmd', cmd
+
+    # get cwd
+    # exec in that cwd
 
 ##########################################
 # boot stack
