@@ -95,14 +95,30 @@ getCommandId = (repl, commandName) ->
   commandsHaveLeadingDot = repl.commands['.help']?
   if commandsHaveLeadingDot then ".#{commandName}" else commandName
 
+complete_command = (token) ->
+  console.log 'completing command', token
+  _(COMMANDS).pluck('name').filter((name) -> name.match(///^#{token}///)).value()
+
+complete_arguments = (args) ->
+  cmd = args.shift()
+
+  _(COMMANDS).pluck('name')
+
+
+  # pull off the last str of the line
+  # get completion function from command_config
+
 patch_repl_tab_complete = (repl) ->
   idx = 0
   repl.complete = (line, callback) ->
-    line = line.replace(/^\s|\s$/g, '')
+    tokens = line.split(/\s/)
 
-    completions = _(COMMANDS).pluck('name').filter((name) ->
-      name.match ///^#{line}///
-    ).value()
+    completions = if tokens.length > 1 or line.match /(\w)+\s+$/
+      complete_arguments tokens
+    else
+      complete_command tokens[0]
+
+    # if command matches exactly, move to next index?
 
     if completions.length > 1
       repl_print completions.join('  ')

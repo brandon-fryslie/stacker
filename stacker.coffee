@@ -12,6 +12,7 @@ child_process = require 'child_process'
 # Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
 ##########################################
 CURRENT_ENV = {}
+ENV_PROPERTY_BLACKLIST = ['start_message', 'name', 'alias', 'command', 'wait_for', 'callback', 'additional_env']
 SET_ENV = (env) ->
   unless env?
     throw new Error "You shouldn't null out the ENV.  Make sure to return ENV from your task handlers"
@@ -19,7 +20,7 @@ SET_ENV = (env) ->
   env = _.cloneDeep env
 
   # dont save the state of some properties
-  for p in ['start_message', 'name', 'alias', 'command', 'wait_for']
+  for p in ENV_PROPERTY_BLACKLIST
     delete env[p]
 
   CURRENT_ENV = env
@@ -43,6 +44,7 @@ GET_ENV = (obj) ->
   _.assign {}, env, obj
 
 # read a property from a task
+# (string, string) -> string
 read_task_property = (task, property) ->
   TASK_CONFIG[task](CURRENT_ENV)[property]
 
@@ -349,7 +351,7 @@ repl_lib.add_command
     PROCS[child_id] = child
 
     repl_lib.print '$>'.gray, "#{'cd'.green} #{path.cyan}#{';'.green}", "#{cmd} #{args.join ' '}".green
-    prefix = util.get_color_fn()("#{child_id} $>")
+    prefix = util.get_color_fn()("#{child_id}:")
     util.pipe_with_prefix prefix, child.stdout, process.stdout
     util.pipe_with_prefix prefix, child.stderr, process.stderr
 
@@ -390,3 +392,4 @@ module.exports =
   boot: boot_stack
   register_task_config: register_task_config
   set_env: SET_ENV
+  read_task_property: read_task_property
