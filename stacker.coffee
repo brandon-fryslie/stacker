@@ -111,9 +111,9 @@ repl_lib.add_command
     stop_indicator = repl_lib.start_progress_indicator()
     child_process.exec './whats-running', (error, stdout, stderr) ->
       stop_indicator()
-      repl_lib.print 'whats-running', line for line in stdout.split('\n')
+      repl_lib.print stdout
       if stderr
-        repl_lib.print 'whats-running error'.red + stderr
+        repl_lib.print stderr.red
 
 ##########################################
 #  nuke javas
@@ -130,6 +130,8 @@ repl_lib.add_command
       # PROCS = {}
       repl_lib.print 'Nuking All Javas!'.magenta
       repl_lib.print stdout
+      if stderr
+        repl_lib.print stderr.red
 
 ##########################################
 #  Repl Help
@@ -186,17 +188,21 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     proc = proc.run (err) ->
       if err
-        repl_lib.print ("Error running task #{task_name}: " + (err.message ? err)).red
+        repl_lib.print ("#{task_name} exited with error: " + (err.message ? err)).red
         kill_tree PROCS[task_name]
-        delete PROCS[task_name]
 
-    pipe_to_std_streams = (task_proc, prefix) ->
+    proc.on 'error', (a,b,c) -> repl_lib.print "not sure when this ever gets called #{task_name.cyan}",a,b,c
+    proc.on 'close', (code, signal) ->
+      print_process_status task_name, code, signal
+      delete PROCS[task_name]
+
+    pipe_to_std_streams = (prefix, task_proc) ->
       prefix = util.get_color_fn()("#{prefix}:")
       util.pipe_with_prefix prefix, task_proc.stdout, process.stdout
       util.pipe_with_prefix prefix, task_proc.stderr, process.stderr
 
     if env.verbose
-      pipe_to_std_streams proc, task_name
+      pipe_to_std_streams task_name, proc
 
     PROCS[task_name] = proc
 
@@ -221,10 +227,7 @@ kill_task = (task) ->
 
   proc = PROCS[task]
   if proc
-    proc.on 'error', (a,b,c) -> repl_lib.print "error sending signal to #{task.cyan}",a,b,c
-    proc.on 'close', (code, signal) ->
-      print_process_status task, code, signal
-      delete PROCS[task]
+    proc.on 'close', ->
       deferred.resolve()
     kill_tree proc.pid
     repl_lib.print "Killing #{task.red}..."

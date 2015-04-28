@@ -83,16 +83,6 @@ task_config =
     if env.with_local_app_catalog
       additional_env['APP_CATALOG_PATH'] = "#{rally.ROOTDIR}/app-catalog"
 
-    if env.clean_alm
-      idx = command.indexOf('jettyRun')
-      if idx > -1
-        command.splice(idx, 0, 'clean')
-
-    if env.db_migrations
-      idx = command.indexOf('jettyRun')
-      if idx > -1
-        command.splice(idx, 0, 'dbM')
-
     if env.with_local_burro
       additional_env['BURRO_URL'] = env.burro_address
 
