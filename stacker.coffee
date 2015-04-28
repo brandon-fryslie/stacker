@@ -12,7 +12,7 @@ child_process = require 'child_process'
 # Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
 ##########################################
 CURRENT_ENV = {}
-ENV_PROPERTY_BLACKLIST = ['start_message', 'name', 'alias', 'command', 'wait_for', 'callback', 'additional_env']
+ENV_PROPERTY_BLACKLIST = ['start_message', 'name', 'alias', 'command', 'wait_for', 'callback', 'additional_env', 'cwd']
 SET_ENV = (env) ->
   unless env?
     throw new Error "You shouldn't null out the ENV.  Make sure to return ENV from your task handlers"
@@ -48,8 +48,20 @@ GET_ENV = (obj) ->
 read_task_property = (task, property) ->
   TASK_CONFIG[task](CURRENT_ENV)[property]
 
+# does this task exist?
+# (string) -> boolean
+task_exists = (task) -> TASK_CONFIG[task]?
+
 # globalish container for running processes
 PROCS = {}
+
+print_process_status = (child_id, exit_code, signal) ->
+  status = switch
+    when exit_code is 0 then 'exited successfully'.green
+    when exit_code? then "exited with code #{exit_code}"
+    when signal? then "exited with signal #{signal}"
+    else 'no exit code and no signal - should investigate'
+  repl_lib.print child_id.cyan, status
 
 ##########################################
 #  Process Status
@@ -74,18 +86,14 @@ repl_lib.add_command
 
 ##########################################
 #  Healthcheck
-#
-#  TODO
-#  Healthcheck services
 ##########################################
-
 repl_lib.add_command
   name: 'health'
   help: 'healthchecks services'
   fn: (task) ->
-    timer = setInterval((-> process.stdout.write ' . '), 300)
+    stop_indicator = repl_lib.start_progress_indicator()
     child_process.exec './healthcheck', (error, stdout, stderr) ->
-      clearInterval(timer)
+      stop_indicator()
       repl_lib.print stdout
       if stderr
         repl_lib.print 'error'.red + stderr
@@ -95,14 +103,14 @@ repl_lib.add_command
 ##########################################
 #  whats-running
 ##########################################
-
 repl_lib.add_command
   name: 'whats-running'
   help: 'whats-running shell script'
   fn: (task) ->
     repl_lib.print 'whats-running', '...'
+    stop_indicator = repl_lib.start_progress_indicator()
     child_process.exec './whats-running', (error, stdout, stderr) ->
-      clearInterval(timer)
+      stop_indicator()
       repl_lib.print 'whats-running', line for line in stdout.split('\n')
       if stderr
         repl_lib.print 'whats-running error'.red + stderr
@@ -110,14 +118,18 @@ repl_lib.add_command
 ##########################################
 #  nuke javas
 ##########################################
-
 repl_lib.add_command
   name: 'nuke'
   help: 'kill -9 java'
   fn: (task) ->
     child_process.exec 'killall -9 java', (error, stdout, stderr) ->
-    PROCS = {}
-    repl_lib.print 'Nuking All Javas!'.magenta
+      if error
+        repl_lib.print error.message.red
+        return
+      # only delete procs that would be killed by killall -9 java...
+      # PROCS = {}
+      repl_lib.print 'Nuking All Javas!'.magenta
+      repl_lib.print stdout
 
 ##########################################
 #  Repl Help
@@ -211,7 +223,7 @@ kill_task = (task) ->
   if proc
     proc.on 'error', (a,b,c) -> repl_lib.print "error sending signal to #{task.cyan}",a,b,c
     proc.on 'close', (code, signal) ->
-      repl_lib.print "Killed #{task.cyan}:", signal
+      print_process_status task, code, signal
       delete PROCS[task]
       deferred.resolve()
     kill_tree proc.pid
@@ -329,24 +341,14 @@ repl_lib.add_command
 
     stop_indicator = repl_lib.start_progress_indicator()
 
-    data_callback = _.once ->
-      process.stdout.write '\n'
-      stop_indicator()
-
-    child.stdout.on 'readable', data_callback
-    child.stdout.on 'data', data_callback
-    child.stderr.on 'readable', data_callback
-    child.stderr.on 'data', data_callback
+    child.stdout.on 'readable', stop_indicator
+    child.stdout.on 'data', stop_indicator
+    child.stderr.on 'readable', stop_indicator
+    child.stderr.on 'data', stop_indicator
 
     child.on 'close', (exit_code, signal) ->
       delete PROCS[child_id]
-      status = switch
-        when exit_code is 0 then 'exited successfully'.green
-        when exit_code? then "exited with code #{exit_code}"
-        when signal? then "exited with signal #{signal}"
-        else 'no exit code and no signal - should investigate'
-
-      repl_lib.print child_id.cyan, status
+      print_process_status child_id, exit_code, signal
 
     PROCS[child_id] = child
 
