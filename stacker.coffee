@@ -7,6 +7,7 @@ nexpect = require 'nexpect'
 repl_lib = require './repl'
 util = require './util'
 child_process = require 'child_process'
+fs = require 'fs'
 
 ##########################################
 # Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
@@ -138,7 +139,7 @@ repl_lib.add_command
 ##########################################
 repl_help = (args) ->
   repl_lib.print 'available commands'.cyan.bold
-  repl_lib.print ("#{name.cyan}:\t#{help}" for {name, help} in repl_lib.get_commands()).join '\n'
+  repl_lib.print ("#{name.cyan}:\t#{help}" for {name, help} in _.values(repl_lib.get_commands())).join '\n'
 
 repl_lib.add_command
   name: 'help'
@@ -327,20 +328,41 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'tell'
   alias: 't'
+  tab_complete: (args) ->
+#    console.log 'tab completing tell'
+    ['ronald', 'mc', 'donald']
+
   help: [
       'usage: tell [TASK] [COMMAND]'
       'tell someone to do something (e.g. tell alm grunt clean build)'
       'important note: things like && and | (pipe) ' + 'WILL NOT WORK!'.yellow.bold
       'alias: t'
     ].join('\n\t')
-  fn: (target, cmd, args...) ->
-    path = read_task_property target, 'cwd'
+  fn: (target, cmd...) ->
+
+    try
+      path = if task_exists(target)
+        read_task_property target, 'cwd'
+      else if fs.statSync("#{process.env.HOME}/projects/#{target}")?.isDirectory()
+        "#{process.env.HOME}/projects/#{target}"
+    catch e
+
+    unless path?
+      repl_lib.print "'#{target}' is not a task name or a directory in ~/projects".red
+      return
+
     opts =
       cwd: path
       env: GET_ENV()
 
-    child = child_process.spawn cmd, args, opts
-    child_id = "#{target}-#{cmd}#{if args.length > 0 then "-#{args.join('-')}" else ''}-#{child.pid}"
+
+    child = child_process.spawn 'zsh', [], opts
+
+    # child.stdin.write("source #{process.env.HOME}/.zshrc;")
+    child.stdin.write(cmd.join(' '))
+    child.stdin.end()
+
+    child_id = "#{target}-#{cmd.join('-')}-#{child.pid}"
 
     stop_indicator = repl_lib.start_progress_indicator()
 
@@ -355,7 +377,7 @@ repl_lib.add_command
 
     PROCS[child_id] = child
 
-    repl_lib.print '$>'.gray, "#{'cd'.green} #{path.cyan}#{';'.green}", "#{cmd} #{args.join ' '}".green
+    repl_lib.print '$>'.gray, "#{'cd'.green} #{path.cyan}#{';'.green}", "#{cmd.join(' ')}".green
     prefix = util.get_color_fn()("#{child_id}:")
     util.pipe_with_prefix prefix, child.stdout, process.stdout
     util.pipe_with_prefix prefix, child.stderr, process.stderr

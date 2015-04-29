@@ -11,14 +11,15 @@ require 'colors'
 REPL = {}
 
 # repl commands
-# an array of command objects:
-# [
-#   name: 'my_command'
-#   help: 'usage: my_command [options]'
-#   alias: 'my'
-#   fn: (opts) -> do_stuff()
-# ]
-COMMANDS = []
+# a map of command objects:
+# {
+#   my_command:
+#     name: 'my_command'
+#     help: 'usage: my_command [options]'
+#     alias: 'my'
+#     fn: (opts) -> do_stuff()
+# }
+COMMANDS = {}
 
 # aliases for repl commands
 # a map like this:
@@ -40,7 +41,7 @@ replDefaults =
     command_name = resolve_command_name util.trim(input[0])
     args = _.map input[1...], util.trim
 
-    command = _.find COMMANDS, name: command_name
+    command = COMMANDS[command_name]
     if command
       command.fn.apply command, args
     else
@@ -96,17 +97,16 @@ getCommandId = (repl, commandName) ->
   if commandsHaveLeadingDot then ".#{commandName}" else commandName
 
 complete_command = (token) ->
-  console.log 'completing command', token
   _(COMMANDS).pluck('name').filter((name) -> name.match(///^#{token}///)).value()
 
+# ([string]) -> [string]
 complete_arguments = (args) ->
   cmd = args.shift()
 
-  _(COMMANDS).pluck('name')
-
-
-  # pull off the last str of the line
-  # get completion function from command_config
+  # console.log 'completing args', args
+  # console.log 'COMMAND', COMMANDS[cmd]
+  choices = COMMANDS[cmd].tab_complete(args)
+  _.filter choices, (name) -> name.match(///#{args[args.length-1]}///)
 
 patch_repl_tab_complete = (repl) ->
   idx = 0
@@ -118,6 +118,8 @@ patch_repl_tab_complete = (repl) ->
     else
       complete_command tokens[0]
 
+    console.log 'got completions', completions
+
     # if command matches exactly, move to next index?
 
     if completions.length > 1
@@ -126,6 +128,7 @@ patch_repl_tab_complete = (repl) ->
       completions = [completions[idx++]]
 
     if completions.length > 0
+      console.log 'calling callback', completions, line
       callback(null, [completions, line])
 
 prefix_print = (prefix, str...) ->
@@ -155,7 +158,7 @@ start_progress_indicator = ->
 
 module.exports =
   add_command: (command) ->
-    COMMANDS.push command
+    COMMANDS[command.name] = command
     if command.alias?
       ALIAS[command.alias] = command.name
 
