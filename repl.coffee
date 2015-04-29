@@ -118,7 +118,7 @@ patch_repl_tab_complete = (repl) ->
     else
       complete_command tokens[0]
 
-    console.log 'got completions', completions
+    # console.log 'got completions', completions
 
     # if command matches exactly, move to next index?
 
@@ -128,7 +128,7 @@ patch_repl_tab_complete = (repl) ->
       completions = [completions[idx++]]
 
     if completions.length > 0
-      console.log 'calling callback', completions, line
+      # console.log 'calling callback', completions, line
       callback(null, [completions, line])
 
 prefix_print = (prefix, str...) ->

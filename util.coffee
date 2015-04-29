@@ -64,6 +64,7 @@ pipe_with_prefix = (prefix, from, to) ->
 ##########################################
 
 # extract first capture group from regex
+# (regex, string) -> string
 regex_extract = (regex, str) ->
   data = regex.exec str
   unless data
