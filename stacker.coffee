@@ -28,7 +28,7 @@ run_cmd = (cmd, cwd, env) ->
   child.stdin.write("mv #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh.old 2>&/dev/null\n")
   child.stdin.write(ZSHMIN + '\n')
   child.stdin.write(cmd.join(' ') + '\n')
-  child.stdin.write("mv #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh.old #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh\n")
+  child.stdin.write("mv #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh.old #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh 2>&/dev/null\n")
   child.stdin.end()
 
   child_id = "#{util.regex_extract(/\/([\w-]+)$/, cwd)}-#{cmd.join('-')}-#{child.pid}"
