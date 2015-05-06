@@ -105,7 +105,7 @@ complete_arguments = (args) ->
 
   # console.log 'completing args', args
   # console.log 'COMMAND', COMMANDS[cmd]
-  choices = COMMANDS[cmd].tab_complete(args)
+  choices = COMMANDS[cmd]?.tab_complete(args)
   _.filter choices, (name) -> name.match(///#{args[args.length-1]}///)
 
 patch_repl_tab_complete = (repl) ->
