@@ -9,6 +9,13 @@ util = require './util'
 child_process = require 'child_process'
 fs = require 'fs'
 
+ZSHMIN =
+  """ZSH=$HOME/.oh-my-zsh
+ZSH_CUSTOM=$HOME/.oh-my-zsh-custom
+ZSH_THEME="git-taculous"
+plugins=(emacs java alm appsdk git gls rally)
+source $ZSH/oh-my-zsh.sh
+export TERM=xterm-256color"""
 
 # Run a command
 # ([string], string, map) -> child_process
@@ -17,8 +24,11 @@ run_cmd = (cmd, cwd, env) ->
     cwd: cwd
     env: env
 
-  # child.stdin.write("cat ~/.zshrc | grep -v rvm | . /dev/stdin\n")
-  child.stdin.write(cmd.join(' '))
+  # hack to prevent bundler
+  child.stdin.write("mv #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh.old 2>&/dev/null\n")
+  child.stdin.write(ZSHMIN + '\n')
+  child.stdin.write(cmd.join(' ') + '\n')
+  child.stdin.write("mv #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh.old #{process.env.HOME}/.oh-my-zsh-custom/rvm.zsh\n")
   child.stdin.end()
 
   child_id = "#{util.regex_extract(/\/([\w-]+)$/, cwd)}-#{cmd.join('-')}-#{child.pid}"

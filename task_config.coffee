@@ -1,5 +1,5 @@
 rally = require './rally'
-{die} = require './util'
+util = require './util'
 repl_lib = require './repl'
 _ = require 'lodash'
 fs = require 'fs'
@@ -14,10 +14,10 @@ task_config =
     callback: (data, env) ->
       [match, zookeeper_address, error] = data
       if error
-        die 'Marshmallow connection timed out: ', data
+        util.die 'Marshmallow connection timed out: ', data
 
       unless zookeeper_address
-        die 'Error: could not find zookeeper address in: ', match
+        util.die 'Error: could not find zookeeper address in: ', match
 
       repl_lib.print 'Zookeeper Address:', zookeeper_address.magenta
 
@@ -37,7 +37,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error, address_in_use_error, host_pool_down_error] = data
       if timeout_error || address_in_use_error || host_pool_down_error
-        die 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
+        util.die 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
       env
 
   'bag-boy': (env) ->
@@ -51,7 +51,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        die 'Error: Bagboy failed to connect to Marshmallow', data.input ? data
+        util.die 'Error: Bagboy failed to connect to Marshmallow', data.input ? data
       env
 
   birdseed: (env) ->
@@ -67,7 +67,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        die 'Error: Birdseed failed to connect to Marshmallow', data.input ? data
+        util.die 'Error: Birdseed failed to connect to Marshmallow', data.input ? data
       env
 
   alm: (env) ->
@@ -110,7 +110,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        die 'Error: ALM failed to connect to Marshmallow', data.input ? data
+        util.die 'Error: ALM failed to connect to Marshmallow', data.input ? data
       env
 
   pigeon: (env) ->
@@ -126,7 +126,7 @@ task_config =
     callback: (data, env) ->
       [match, exception] = data
       if exception
-        die 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
+        util.die 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
       env
 
   burro: (env) ->
