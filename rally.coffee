@@ -17,7 +17,7 @@ get_schema_name = ->
   # Get schema name from .gradle/alm.groovy
   try
     groovy_file = fs.readFileSync "#{process.env.HOME}/.gradle/alm.groovy", 'utf8'
-    groovy_schema_name = util.regex_extract /System\.env\.DB_NAME \?: '([^']+)'/, groovy_file
+    groovy_schema_name = util.regex_extract /System\.env\.DB_NAME \?: '([^'"]+)'/, groovy_file
   catch e
     repl_lib.print "Did not find file #{"#{process.env.HOME}/.gradle/alm.groovy"}\n".yellow
 
