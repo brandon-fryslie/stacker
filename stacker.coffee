@@ -479,12 +479,28 @@ repl_lib.add_command
     repl_lib.print 'tasks:', (_(TASK_CONFIG).keys().value().join ' ').cyan
 
 ################################################################################
+# exit stacker
+################################################################################
+stacker_exit = ->
+  # max timeout of 4s
+  _.delay process.exit, 4000
+  console.log 'doing stacker exit'
+
+  kill_running_tasks().then ->
+    repl_lib.print 'killed running tasks'
+
+    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split(' ')
+    _.map words, (word) ->
+      setTimeout (-> repl.outputStream.write "#{word.blue.bold} "), t += delta
+
+    _.delay process.exit, words.length * delta
+
+################################################################################
 # boot stack
 #
 # Boots the stack
 ################################################################################
-
-boot_stack = (tasks) ->
+boot_stack = (tasks, should_start_repl) ->
   check_system()
   repl_lib.print 'VERBOSE MODE'.red if CURRENT_ENV.verbose
   if tasks.length > 0
@@ -492,21 +508,11 @@ boot_stack = (tasks) ->
   else
     repl_lib.print 'Starting REPL'.bold.green
 
-  repl = repl_lib.start()
-
-  # TODO: kill all running processes on exit
-  repl.on 'exit', ->
-    # max timeout of 4s
-    _.delay process.exit, 4000
-
-    kill_running_tasks().then ->
-      repl_lib.print 'killed running tasks'
-
-      t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split(' ')
-      _.map words, (word) ->
-        setTimeout (-> repl.outputStream.write "#{word.blue.bold} "), t += delta
-
-      _.delay process.exit, words.length * delta
+  if should_start_repl
+    repl = repl_lib.start()
+    repl.on 'exit', -> stacker_exit()
+  else
+    process.on 'exit', -> stacker_exit()
 
   run_tasks(tasks, CURRENT_ENV)
 

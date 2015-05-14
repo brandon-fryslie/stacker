@@ -42,6 +42,13 @@ opts = nomnom
   abbr: 'q'
   flag: true
 )
+.option('no-repl'
+  help: 'do not start repl'
+  flag: true
+)
 .parse()
+
+# nomnom is fucking stupid
+opts['no-repl'] = opts.repl is false
 
 module.exports = opts
