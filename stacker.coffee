@@ -484,8 +484,7 @@ repl_lib.add_command
 stacker_exit = ->
   # max timeout of 4s
   _.delay process.exit, 4000
-  console.log 'doing stacker exit'
-
+  console.trace("exiting stacker")
   kill_running_tasks().then ->
     repl_lib.print 'killed running tasks'
 
