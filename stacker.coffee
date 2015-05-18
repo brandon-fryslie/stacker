@@ -512,7 +512,8 @@ boot_stack = (tasks, should_start_repl) ->
     repl = repl_lib.start()
     repl.on 'exit', -> stacker_exit()
   else
-    process.on 'exit', -> stacker_exit()
+    process.on 'exit', ->
+      console.log '!!!process exited!!!'
 
   run_tasks(tasks, CURRENT_ENV)
 
