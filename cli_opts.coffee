@@ -46,6 +46,9 @@ opts = nomnom
   help: 'do not start repl'
   flag: true
 )
+.option('schema'
+  help: 'specify oracle schema name'
+)
 .parse()
 
 # nomnom is fucking stupid

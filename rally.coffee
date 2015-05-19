@@ -12,7 +12,7 @@ BLD_ZOOKEEPER_ADDRESS = 'bld-zookeeper-01:2181,bld-zookeeper-02:2181,bld-zookeep
 WARNINGS = []
 
 # Gets + Checks ALM Schema name
-get_schema_name = ->
+get_schema_name = _.memoize ->
 
   # Get schema name from .gradle/alm.groovy
   try
@@ -71,7 +71,7 @@ resolve_task_name = (name) ->
   }[name] || name
 
 module.exports =
-  get_schema_name: get_schema_name()
+  get_schema_name: get_schema_name
   get_tasks_to_start: get_tasks_to_start
   resolve_task_name: resolve_task_name
   ROOTDIR: ROOTDIR

@@ -32,7 +32,7 @@ task_config =
     cwd: "#{rally.ROOTDIR}/zuul"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
-      ZUUL_TENANT_OVERRIDE: rally.get_schema_name
+      ZUUL_TENANT_OVERRIDE: env.schema
     wait_for: /Server started!|(Connection timed out)|(Address already in use)|(All host pools marked down.)/
     callback: (data, env) ->
       [match, timeout_error, address_in_use_error, host_pool_down_error] = data
@@ -61,7 +61,7 @@ task_config =
     cwd: "#{rally.ROOTDIR}/birdseed"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
-      BIRDSEED_SCHEMAS: rally.get_schema_name
+      BIRDSEED_SCHEMAS: env.schema
       DEV_MODE: false
     wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/
     callback: (data, env) ->
@@ -121,7 +121,7 @@ task_config =
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
-      STACK: rally.get_schema_name
+      STACK: env.schema
     wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
     callback: (data, env) ->
       [match, exception] = data

@@ -484,9 +484,8 @@ repl_lib.add_command
 stacker_exit = ->
   # max timeout of 4s
   _.delay process.exit, 4000
-  console.trace("exiting stacker")
   kill_running_tasks().then ->
-    repl_lib.print 'killed running tasks'
+    repl_lib.print 'Killed running tasks!'.green
 
     t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split(' ')
     _.map words, (word) ->
@@ -510,9 +509,6 @@ boot_stack = (tasks, should_start_repl) ->
   if should_start_repl
     repl = repl_lib.start()
     repl.on 'exit', -> stacker_exit()
-  else
-    process.on 'exit', ->
-      console.log '!!!process exited!!!'
 
   run_tasks(tasks, CURRENT_ENV)
 
