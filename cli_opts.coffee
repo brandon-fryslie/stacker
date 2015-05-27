@@ -49,6 +49,15 @@ opts = nomnom
 .option('schema'
   help: 'specify oracle schema name'
 )
+.option('bag-boy-profile'
+  help: 'specify a lein profile for bag-boy'
+)
+.option('birdseed-profile'
+  help: 'specify a lein profile for birdseed'
+)
+.option('pigeon-profile'
+  help: 'specify a lein profile for pigeon'
+)
 .parse()
 
 # nomnom is fucking stupid

@@ -41,9 +41,14 @@ task_config =
       env
 
   'bag-boy': (env) ->
+    command = if env['bag-boy-profile'].length is 0
+      ['lein', 'run']
+    else
+      ['lein', 'with-profile', env['bag-boy-profile'], 'run']
+
     name: 'Bag Boy'
     alias: 'bb'
-    command: ['lein', 'run']
+    command: command
     cwd: "#{rally.ROOTDIR}/bag-boy"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
@@ -55,14 +60,18 @@ task_config =
       env
 
   birdseed: (env) ->
+    command = if env['birdseed-profile'].length is 0
+      ['lein', 'run']
+    else
+      ['lein', 'with-profile', env['birdseed-profile'], 'run']
+
     name: 'Birdseed'
     alias: 'bs'
-    command: ['lein', 'run']
+    command: command
     cwd: "#{rally.ROOTDIR}/birdseed"
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       BIRDSEED_SCHEMAS: env.schema
-      DEV_MODE: false
     wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/
     callback: (data, env) ->
       [match, timeout_error] = data
@@ -114,9 +123,14 @@ task_config =
       env
 
   pigeon: (env) ->
+    command = if env['pigeon-profile'].length is 0
+      ['lein', 'run']
+    else
+      ['lein', 'with-profile', env['pigeon-profile'], 'run']
+
     name: 'Pigeon'
     alias: 'p'
-    command: ['lein', 'run']
+    command: command
     start_message: "on #{'127.0.0.1:3200'.magenta}"
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
