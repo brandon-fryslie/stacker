@@ -137,7 +137,7 @@ repl_lib.add_command
   help: 'healthchecks services'
   fn: (task) ->
     stop_indicator = repl_lib.start_progress_indicator()
-    child_process.exec './healthcheck', (error, stdout, stderr) ->
+    child_process.exec './healthcheck --color=always', (error, stdout, stderr) ->
       stop_indicator()
       repl_lib.print stdout
       if stderr
