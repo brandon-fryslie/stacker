@@ -3,7 +3,7 @@
 colors = require 'colors'
 Q = require 'q'
 _ = require 'lodash'
-nexpect = require 'nexpect'
+mexpect = require './mexpect'
 repl_lib = require './repl'
 util = require './util'
 child_process = require 'child_process'
@@ -254,11 +254,15 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
       return deferred.promise
 
-    proc = nexpect.spawn(env.command, [],
+    [cmd, argv...] = env.command
+
+    mproc = mexpect.spawn(cmd, argv,
       verbose: false
       env: GET_ENV env.additional_env
       cwd: cwd
-    ).wait env.wait_for, (data) ->
+    )
+
+    mproc.wait_for env.wait_for, (data) ->
       data = env.wait_for.exec?(data) ? [data]
       try
         SET_ENV callback data, env
@@ -267,7 +271,9 @@ start_task = (task_name, env=CURRENT_ENV) ->
       catch e
         repl_lib.print "Failed to start #{env.name}!".bold.red, e
 
-    proc = proc.run (err) ->
+    proc = mproc.proc
+
+    proc.on 'close', (err) ->
       if err
         unless err.name is 'AssertionError' # ignore this error from nexpect
           repl_lib.print ("#{task_name} exited with error: " + (err.message ? err)).red
@@ -478,7 +484,7 @@ repl_lib.add_command
 ################################################################################
 # exit stacker
 ################################################################################
-stacker_exit = ->
+stacker_exit = (repl) ->
   # max timeout of 4s
   _.delay process.exit, 4000
   kill_running_tasks().then ->
@@ -505,7 +511,7 @@ boot_stack = (tasks, should_start_repl) ->
 
   if should_start_repl
     repl = repl_lib.start()
-    repl.on 'exit', -> stacker_exit()
+    repl.on 'exit', -> stacker_exit repl
 
   run_tasks(tasks, CURRENT_ENV)
 

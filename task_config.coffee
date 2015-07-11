@@ -14,10 +14,12 @@ task_config =
     callback: (data, env) ->
       [match, zookeeper_address, error] = data
       if error
-        util.die 'Marshmallow connection timed out: ', data
+        util.error 'Marshmallow connection timed out: ', data
+        return env
 
       unless zookeeper_address
-        util.die 'Error: could not find zookeeper address in: ', match
+        util.error 'Error: could not find zookeeper address in: ', match
+        return env
 
       repl_lib.print 'Zookeeper Address:', zookeeper_address.magenta
 
@@ -37,7 +39,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error, address_in_use_error, host_pool_down_error] = data
       if timeout_error || address_in_use_error || host_pool_down_error
-        util.die 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
+        util.error 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
       env
 
   'bag-boy': (env) ->
@@ -56,7 +58,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        util.die 'Error: Bagboy failed to connect to Marshmallow', data.input ? data
+        util.error 'Error: Bagboy failed to connect to Marshmallow', data.input ? data
       env
 
   birdseed: (env) ->
@@ -76,7 +78,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        util.die 'Error: Birdseed failed to connect to Marshmallow', data.input ? data
+        util.error 'Error: Birdseed failed to connect to Marshmallow', data.input ? data
       env
 
   alm: (env) ->
@@ -105,9 +107,7 @@ task_config =
         stat = fs.lstatSync("#{process.env.WEBAPP_HOME}/node_modules/churro/node_modules/sombrero")
         msg += if stat.isSymbolicLink() then " with symlinked #{'sombrero'.cyan}" else ''
       catch e
-        repl_lib.print 'Could not find sombrero.  Try npm install'.yellow
     catch e
-      repl_lib.print 'Could not find churro.  Try npm install'.yellow
 
     name: 'ALM'
     alias: 'a'
@@ -119,7 +119,7 @@ task_config =
     callback: (data, env) ->
       [match, timeout_error] = data
       if timeout_error
-        util.die 'Error: ALM failed to connect to Marshmallow', data.input ? data
+        util.error 'Error: ALM failed to connect to Marshmallow', data.input ? data
       env
 
   pigeon: (env) ->
@@ -140,11 +140,11 @@ task_config =
     callback: (data, env) ->
       [match, exception] = data
       if exception
-        util.die 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
+        util.error 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
       env
 
   burro: (env) ->
-    command = ['npm', 'start']
+    command = ['npm', 'run', 'dev']
     command.push("#{rally.ROOTDIR}/churro") if env.with_local_churro
     name: 'Burro'
     alias: 'b'
