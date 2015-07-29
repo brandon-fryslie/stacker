@@ -504,14 +504,15 @@ stacker_exit = (repl) ->
 boot_stack = (tasks, should_start_repl) ->
   check_system()
   repl_lib.print 'VERBOSE MODE'.red if CURRENT_ENV.verbose
-  if tasks.length > 0
-    repl_lib.print 'running tasks:', tasks.join(' ').cyan
-  else
-    repl_lib.print 'Starting REPL'.bold.green
 
   if should_start_repl
+    repl_lib.print 'Starting REPL'.bold.green
     repl = repl_lib.start()
     repl.on 'exit', -> stacker_exit repl
+
+  if tasks.length > 0
+    repl_lib.print 'running tasks:', tasks.join(' ').cyan
+
 
   run_tasks(tasks, CURRENT_ENV)
 
