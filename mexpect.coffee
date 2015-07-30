@@ -1,5 +1,6 @@
 child_process = require('child_process')
 stream = require 'stream'
+_ = require 'lodash'
 
 create_transform_stream = (fn, flush_fn) ->
   liner = new stream.Transform()
@@ -55,13 +56,19 @@ class Mexpect
 
   wait_for: (expectation, cb) =>
     nl_stream = create_newline_transform_stream()
-    cb_stream = create_callback_transform_stream(expectation, cb)
+    cb_stream = create_callback_transform_stream expectation, cb
+    @proc.stdout.pipe(nl_stream).pipe(cb_stream)
+    @
+
+  wait_for_once: (expectation, cb) =>
+    nl_stream = create_newline_transform_stream()
+    cb_stream = create_callback_transform_stream expectation, _.once cb
     @proc.stdout.pipe(nl_stream).pipe(cb_stream)
     @
 
   wait_for_err: (expectation, cb) =>
     nl_stream = create_newline_transform_stream()
-    cb_stream = create_callback_transform_stream(expectation, cb)
+    cb_stream = create_callback_transform_stream expectation, cb
     @proc.stderr.pipe(nl_stream).pipe(cb_stream)
     @
 

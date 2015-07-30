@@ -262,7 +262,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
       cwd: cwd
     )
 
-    mproc.wait_for env.wait_for, (data) ->
+    mproc.wait_for_once env.wait_for, (data) ->
       data = env.wait_for.exec?(data) ? [data]
       try
         SET_ENV callback data, env
@@ -273,17 +273,12 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     proc = mproc.proc
 
-    proc.on 'close', (err) ->
-      if err
-        unless err.name is 'AssertionError' # ignore this error from nexpect
-          repl_lib.print ("#{task_name} exited with error: " + (err.message ? err)).red
-        kill_tree PROCS[task_name]
-
     proc.on 'error', (a,b,c) ->
       repl_lib.print "not sure when this ever gets called #{task_name.cyan}",a,b,c
 
     proc.on 'close', (code, signal) ->
       print_process_status task_name, code, signal
+      kill_tree proc
       delete PROCS[task_name]
 
     pipe_to_std_streams = (prefix, task_proc) ->
