@@ -254,13 +254,10 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
       return deferred.promise
 
-    [cmd, argv...] = env.command
-
-    mproc = mexpect.spawn(cmd, argv,
+    mproc = mexpect.spawn 'zsh', [],
       verbose: false
       env: GET_ENV env.additional_env
       cwd: cwd
-    )
 
     mproc.wait_for_once env.wait_for, (data) ->
       data = env.wait_for.exec?(data) ? [data]
@@ -272,6 +269,10 @@ start_task = (task_name, env=CURRENT_ENV) ->
         repl_lib.print "Failed to start #{env.name}!".bold.red, e
 
     proc = mproc.proc
+
+    proc.stdin.write('. ~/.nvm/nvm.sh\n')
+    proc.stdin.write(env.command.join(' ') + '\n')
+    proc.stdin.end()
 
     proc.on 'error', (a,b,c) ->
       repl_lib.print "not sure when this ever gets called #{task_name.cyan}",a,b,c
