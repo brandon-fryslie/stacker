@@ -172,9 +172,9 @@ task_config =
   test: (env) ->
     name: 'Test'
     alias: 't'
-    command: ['tail', '-n20', '-f', 'stacker/task_config.coffee']
-    start_message: 'test read'
-    wait_for: /The Words You Are Reading Right Now!/
+    command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/boot-realtime"]
+    start_message: 'Testing a basic task...'
+    wait_for: /stacker/
 
   error: (env) ->
     name: 'Error'
