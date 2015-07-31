@@ -270,7 +270,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     proc = mproc.proc
 
-    proc.stdin.write('. ~/.nvm/nvm.sh\n')
+    proc.stdin.write('[[ -e ~/.nvm/nvm.sh ]] && . ~/.nvm/nvm.sh\n')
     proc.stdin.write(env.command.join(' ') + '\n')
     proc.stdin.end()
 
