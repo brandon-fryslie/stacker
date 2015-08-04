@@ -254,7 +254,9 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
       return deferred.promise
 
-    mproc = mexpect.spawn 'zsh', [],
+    [cmd, argv...] = env.command
+
+    mproc = mexpect.spawn cmd, argv,
       verbose: false
       env: GET_ENV env.additional_env
       cwd: cwd
@@ -269,9 +271,6 @@ start_task = (task_name, env=CURRENT_ENV) ->
         repl_lib.print "Failed to start #{env.name}!".bold.red, e
 
     proc = mproc.proc
-
-    # proc.stdin.write('[[ -e ~/.nvm/nvm.sh ]] && . ~/.nvm/nvm.sh\n')
-    proc.stdin.write(env.command.join(' ') + '\n')
 
     proc.on 'error', (err) ->
       msg = switch err.code
