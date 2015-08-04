@@ -279,7 +279,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     proc.on 'close', (code, signal) ->
       print_process_status task_name, code, signal
-      kill_tree proc
+      kill_tree proc.pid
       delete PROCS[task_name]
 
     pipe_to_std_streams = (prefix, task_proc) ->
