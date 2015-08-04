@@ -19,7 +19,6 @@ get_schema_name = _.memoize ->
     groovy_file = fs.readFileSync "#{process.env.HOME}/.gradle/alm.groovy", 'utf8'
     groovy_schema_name = util.regex_extract /System\.env\.DB_NAME \?: '([^'"]+)'/, groovy_file
   catch e
-    repl_lib.print "Did not find file #{"#{process.env.HOME}/.gradle/alm.groovy"}\n".yellow
 
   # Get schema name from .m2/settings.xml
   try
@@ -27,13 +26,12 @@ get_schema_name = _.memoize ->
     active_profile = util.regex_extract /\<activeProfile\>([^<]+)<\/activeProfile>/, m2_file
     m2_schema_name = util.regex_extract ///<id>#{active_profile}</id>[\s\S]*?<dbname>([^<]+)</dbname>///, m2_file
   catch e
-    repl_lib.print "Did not find file #{"#{process.env.HOME}/.m2/settings.xml"}".yellow
 
   if not groovy_file and not m2_file
     util.die 'Error: Could not find either groovy file or m2 file'
 
   if m2_schema_name? and groovy_schema_name? and (m2_schema_name isnt groovy_schema_name)
-    util.die "Error: schema in .m2/settings.xml #{m2_schema_name} doesn't match schema in .gradle/alm.groovy #{groovy_schema_name}.  This can cause problems I don't quite remember"
+    util.warn "Warn: schema in .m2/settings.xml #{m2_schema_name} doesn't match schema in .gradle/alm.groovy #{groovy_schema_name}.  This can cause problems I don't quite remember"
 
   schema_name = groovy_schema_name
 

@@ -457,16 +457,6 @@ repl_lib.add_command
     _.map targets, (target) -> tell_target target, cmd
 
 ################################################################################
-# check
-#
-# check the system
-################################################################################
-check_system = ->
-  hosts_file = fs.readFileSync '/etc/hosts', 'utf8'
-  unless hosts_file.match(/realtime.rally.dev/)
-    repl_lib.print 'Warning: missing realtime.rally.dev in your /etc/hosts file.  nginx wont work'
-
-################################################################################
 # tasks
 #
 # print all tasks
@@ -498,7 +488,6 @@ stacker_exit = (repl) ->
 # Boots the stack
 ################################################################################
 boot_stack = (tasks, should_start_repl) ->
-  check_system()
   repl_lib.print 'VERBOSE MODE'.red if CURRENT_ENV.verbose
 
   if should_start_repl
