@@ -270,11 +270,16 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     proc = mproc.proc
 
-    proc.stdin.write('[[ -e ~/.nvm/nvm.sh ]] && . ~/.nvm/nvm.sh\n')
+    # proc.stdin.write('[[ -e ~/.nvm/nvm.sh ]] && . ~/.nvm/nvm.sh\n')
     proc.stdin.write(env.command.join(' ') + '\n')
 
-    proc.on 'error', (a,b,c) ->
-      repl_lib.print "not sure when this ever gets called #{task_name.cyan}",a,b,c
+    proc.on 'error', (err) ->
+      msg = switch err.code
+        when 'ENOENT' then "#{err.code} (File not found)"
+        when 'EPIPE' then "#{err.code} (Writing to closed pipe)"
+        else err.code
+
+      repl_lib.print "Error: #{task_name} #{err.code} #{msg}"
 
     proc.on 'close', (code, signal) ->
       print_process_status task_name, code, signal

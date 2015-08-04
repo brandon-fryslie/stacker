@@ -77,9 +77,6 @@ class Mexpect
     opt.env ?= get_env()
     @proc = child_process.spawn(cmd, argv, opt)
 
-    @proc.on 'error', ->
-      console.log 'Got a proc error', arguments
-
     if opt.verbose
       line_stream = create_newline_transform_stream()
       prefix_stream = create_prefix_transform_stream '!!!'
