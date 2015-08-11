@@ -14,26 +14,14 @@ WARNINGS = []
 # Gets + Checks ALM Schema name
 get_schema_name = _.memoize ->
 
-  # Get schema name from .gradle/alm.groovy
-  try
+  try # Get schema name from .gradle/alm.groovy
     groovy_file = fs.readFileSync "#{process.env.HOME}/.gradle/alm.groovy", 'utf8'
-    groovy_schema_name = util.regex_extract /System\.env\.DB_NAME \?: '([^'"]+)'/, groovy_file
+    active_profile = util.regex_extract /active\s*=\s*(\w+)/, groovy_file
+    schema_name = util.regex_extract ///#{active_profile}\s+{[\s\S]+?System\.env\.DB_NAME\s+\?:\s+['"]([^'"]+?)['"]///, groovy_file
   catch e
 
-  # Get schema name from .m2/settings.xml
-  try
-    m2_file = fs.readFileSync "#{process.env.HOME}/.m2/settings.xml", 'utf8'
-    active_profile = util.regex_extract /\<activeProfile\>([^<]+)<\/activeProfile>/, m2_file
-    m2_schema_name = util.regex_extract ///<id>#{active_profile}</id>[\s\S]*?<dbname>([^<]+)</dbname>///, m2_file
-  catch e
-
-  if not groovy_file and not m2_file
-    util.die 'Error: Could not find either groovy file or m2 file'
-
-  if m2_schema_name? and groovy_schema_name? and (m2_schema_name isnt groovy_schema_name)
-    util.warn "Warn: schema in .m2/settings.xml #{m2_schema_name} doesn't match schema in .gradle/alm.groovy #{groovy_schema_name}.  This can cause problems I don't quite remember"
-
-  schema_name = groovy_schema_name
+  if not groovy_file
+    util.die 'Error: Could not find ~/.gradle/alm.groovy'
 
   if schema_name is 'indy' or schema_name is 'spoonpairing'
     util.die 'Error: make sure your schema name is not indy or spoonpairing.  Those are special schemas, people will be unhappy if they get broken'
