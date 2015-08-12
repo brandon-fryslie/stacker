@@ -290,22 +290,22 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
     util.log_error "Error: #{task_name} #{err.code} #{msg}"
 
-    proc.on 'close', (code, signal) ->
-      print_process_status task_name, code, signal
-      kill_tree proc.pid
-      delete PROCS[task_name]
+  proc.on 'close', (code, signal) ->
+    print_process_status task_name, code, signal
+    kill_tree proc.pid
+    delete PROCS[task_name]
 
-    pipe_to_std_streams = (prefix, task_proc) ->
-      prefix = util.get_color_fn()("#{prefix}:")
-      util.pipe_with_prefix prefix, task_proc.stdout, process.stdout
-      util.pipe_with_prefix prefix, task_proc.stderr, process.stderr
+  pipe_to_std_streams = (prefix, task_proc) ->
+    prefix = util.get_color_fn()("#{prefix}:")
+    util.pipe_with_prefix prefix, task_proc.stdout, process.stdout
+    util.pipe_with_prefix prefix, task_proc.stderr, process.stderr
 
-    if env.verbose
-      pipe_to_std_streams task_name, proc
+  if env.verbose
+    pipe_to_std_streams task_name, proc
 
-    PROCS[task_name] = proc
+  PROCS[task_name] = proc
 
-    deferred.promise
+  deferred.promise
 
 ################################################################################
 #  Kill task
