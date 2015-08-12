@@ -39,7 +39,6 @@ create_prefix_transform_stream = (prefix) ->
 
 create_callback_transform_stream = (expectation, cb) ->
   create_transform_stream (line) ->
-    # console.log "testing #{line} for #{expectation}"
     if expectation.test? and expectation.test(line) or line.toString().indexOf?(expectation) > -1
       data = expectation.exec?(line) ? [data]
       cb data

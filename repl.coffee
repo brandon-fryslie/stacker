@@ -102,12 +102,10 @@ complete_command = (token) ->
 # ([string]) -> [string]
 complete_arguments = (args) ->
   cmd = args.shift()
-
-  # console.log 'completing args', args
-  # console.log 'COMMAND', COMMANDS[cmd]
   choices = COMMANDS[cmd]?.tab_complete(args)
   _.filter choices, (name) -> name.match(///#{args[args.length-1]}///)
 
+# not hooked up. in progress...not sure if will be finished
 patch_repl_tab_complete = (repl) ->
   idx = 0
   repl.complete = (line, callback) ->
