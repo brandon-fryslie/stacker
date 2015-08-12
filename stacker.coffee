@@ -216,69 +216,69 @@ wait_for_keypress = ->
   return deferred.promise
 
 start_task = (task_name, env=CURRENT_ENV) ->
-    deferred = Q.defer()
+  deferred = Q.defer()
 
-    unless task_name
-      return Q()
+  unless task_name
+    return Q()
 
-    task_name = resolve_task_name task_name
+  task_name = resolve_task_name task_name
 
-    unless TASK_CONFIG[task_name]?
-      util.log_error "Task does not exist: #{task_name}"
-      return Q()
+  unless TASK_CONFIG[task_name]?
+    util.log_error "Task does not exist: #{task_name}"
+    return Q()
 
-    env = get_opts_for_task(task_name, env)
+  env = get_opts_for_task(task_name, env)
 
-    repl_lib.print "Starting #{task_name.cyan}".yellow
+  repl_lib.print "Starting #{task_name.cyan}".yellow
 
-    repl_lib.print '$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
+  repl_lib.print '$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
 
-    if env.start_message
-      repl_lib.print env.start_message
+  if env.start_message
+    repl_lib.print env.start_message
 
-    callback = env.callback ? (_, env) -> env
+  callback = env.callback ? (_, env) -> env
 
-    try
-      cwd = env.cwd ? require.main.filename.replace(/\/[\w-_]+$/, '')
-      fs.statSync(cwd).isDirectory()
-    catch e
-      repl_lib.print "You don't have #{task_name}.  Try cloning? [yn]".yellow
-      wait_for_keypress().then (char) ->
-        if char.toString() is 'y'
-          try_to_clone(task_name).then ->
-            repl_lib.print 'Cloned!'.green
-            deferred.resolve CURRENT_ENV
-        else
-          repl_lib.print 'Not cloning'.magenta
+  try
+    cwd = env.cwd ? require.main.filename.replace(/\/[\w-_]+$/, '')
+    fs.statSync(cwd).isDirectory()
+  catch e
+    repl_lib.print "You don't have #{task_name}.  Try cloning? [yn]".yellow
+    wait_for_keypress().then (char) ->
+      if char.toString() is 'y'
+        try_to_clone(task_name).then ->
+          repl_lib.print 'Cloned!'.green
           deferred.resolve CURRENT_ENV
-
-      return deferred.promise
-
-    [cmd, argv...] = env.command
-
-    mproc = mexpect.spawn cmd, argv,
-      verbose: false
-      env: GET_ENV env.additional_env
-      cwd: cwd
-
-    mproc.wait_for_once env.wait_for, (data) ->
-      data = env.wait_for.exec?(data) ? [data]
-      try
-        SET_ENV callback data, env
+      else
+        repl_lib.print 'Not cloning'.magenta
         deferred.resolve CURRENT_ENV
-        repl_lib.print "Started #{env.name}!".green
-      catch e
-        repl_lib.print "Failed to start #{env.name}!".bold.red, e
 
-    proc = mproc.proc
+    return deferred.promise
 
-    proc.on 'error', (err) ->
-      msg = switch err.code
-        when 'ENOENT' then "#{err.code} (File not found)"
-        when 'EPIPE' then "#{err.code} (Writing to closed pipe)"
-        else err.code
+  [cmd, argv...] = env.command
 
-      repl_lib.print "Error: #{task_name} #{err.code} #{msg}"
+  mproc = mexpect.spawn cmd, argv,
+    verbose: false
+    env: GET_ENV env.additional_env
+    cwd: cwd
+
+  mproc.wait_for_once env.wait_for, (data) ->
+    data = env.wait_for.exec?(data) ? [data]
+    try
+      SET_ENV callback data, env
+      deferred.resolve CURRENT_ENV
+      repl_lib.print "Started #{env.name}!".green
+    catch e
+      repl_lib.print "Failed to start #{env.name}!".bold.red, e
+
+  proc = mproc.proc
+
+  proc.on 'error', (err) ->
+    msg = switch err.code
+      when 'ENOENT' then "#{err.code} (File not found)"
+      when 'EPIPE' then "#{err.code} (Writing to closed pipe)"
+      else err.code
+
+    repl_lib.print "Error: #{task_name} #{err.code} #{msg}"
 
     proc.on 'close', (code, signal) ->
       print_process_status task_name, code, signal
