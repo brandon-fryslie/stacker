@@ -1,21 +1,38 @@
 require 'colors'
 stream = require 'stream'
 
-# Utilities
+# print something with a prefix
+prefix_print = (prefix, str...) ->
+  str.splice 0, 0, prefix
+
+  str = for s in str
+    "#{s}".split('\n').join("\n#{prefix} ")
+
+  console.log.apply @, str
+
+# exposed function for printing messages from stacker itself
+repl_print = (str...) ->
+  str.unshift 'stacker:'.bgWhite.black
+  prefix_print.apply @, str
+
+# kills the whole shebang.  probably don't use this
 die = (msg...) ->
   msg = color_array msg, 'red'
-  console.log 'YOU DED'.red
-  console.log.apply this, msg
+  repl_print 'YOU DED'.red
+  repl_print.apply this, msg
   process.exit 1
 
+# throw exception and print error
 error = (msg...) ->
   log_error.apply this, msg
   throw new Error msg
 
+# only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  console.log.apply this, msg
+  repl_print.apply this, msg
 
+# color an array of strings
 color_array = (array, color) ->
   for s in array
     if typeof s is 'string' and s[color] then s[color] else s
@@ -86,6 +103,7 @@ module.exports =
   die: die
   error: error
   log_error: log_error
+  repl_print: repl_print
   trim: trim
   color_array: color_array
   regex_extract: regex_extract

@@ -45,7 +45,7 @@ replDefaults =
     if command
       command.fn.apply command, args
     else
-      repl_print 'not a command:', command_name
+      util.repl_print 'not a command:', command_name
 
     cb()
 
@@ -116,30 +116,15 @@ patch_repl_tab_complete = (repl) ->
     else
       complete_command tokens[0]
 
-    # console.log 'got completions', completions
-
     # if command matches exactly, move to next index?
 
     if completions.length > 1
-      repl_print completions.join('  ')
+      util.repl_print completions.join('  ')
       idx = if idx >= completions.length then 0 else idx
       completions = [completions[idx++]]
 
     if completions.length > 0
-      # console.log 'calling callback', completions, line
       callback(null, [completions, line])
-
-prefix_print = (prefix, str...) ->
-  str.splice 0, 0, prefix
-
-  str = for s in str
-    "#{s}".split('\n').join("\n#{prefix} ")
-
-  console.log.apply @, str
-
-repl_print = (str...) ->
-  str.unshift 'stacker:'.bgWhite.black
-  prefix_print.apply @, str
 
 start_progress_indicator = ->
   fn = ->
@@ -164,8 +149,7 @@ module.exports =
 
   get_commands: -> COMMANDS
 
-  print: repl_print
-  prefix_print: prefix_print
+  print: util.repl_print
   start_progress_indicator: start_progress_indicator
 
   start: (opts = {}) ->
