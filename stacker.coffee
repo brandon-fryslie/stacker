@@ -229,6 +229,13 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
   env = get_opts_for_task(task_name, env)
 
+  if env.check?
+    if !env.check()
+      util.log_error "Task #{task_name} failed prestart check"
+      return Q()
+    else
+      util.repl_print "Task #{task_name} passed prestart check".green
+
   repl_lib.print "Starting #{task_name.cyan}".yellow
 
   repl_lib.print '$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
@@ -252,6 +259,9 @@ start_task = (task_name, env=CURRENT_ENV) ->
         repl_lib.print 'Not cloning'.magenta
         deferred.resolve CURRENT_ENV
 
+    # this should work:
+    # do run_task with the task you just cloned
+    # return THAT promise here
     return deferred.promise
 
   [cmd, argv...] = env.command
@@ -334,7 +344,7 @@ repl_lib.add_command
   fn: kill_task
 
 kill_running_tasks = ->
-  repl_lib.print "Killing all tasks..."
+  repl_lib.print "Killing all tasks...".yellow
   Q.all _(PROCS).keys().map(kill_task).value()
 
 repl_lib.add_command

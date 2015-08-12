@@ -170,12 +170,18 @@ task_config =
       env
 
   "churro-webpack": (env) ->
-    command =
     name: 'Churro WebpackDevServer'
     alias: 'cwpds'
-    command: ['nvm', 'use', '0.10', '&&', 'grunt', 'webpack-dev-server']
+    command: ['grunt', 'webpack-dev-server']
     start_message: "on #{'127.0.0.1:1337'.magenta}"
     cwd: "#{rally.ROOTDIR}/churro"
+    check: ->
+      isNodeTen = parseInt(process.versions.node.split?('.')?[1]) is 10
+
+      unless isNodeTen
+        util.log_error 'Warning: this task is only compatible with node v0.10.'
+
+      isNodeTen
     wait_for: /webpack-dev-server on port (\d+)/
     callback: (data, env) ->
       [match, webpack_port] = data
