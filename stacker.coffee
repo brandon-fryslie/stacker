@@ -284,11 +284,11 @@ start_task = (task_name, env=CURRENT_ENV) ->
 
   proc.on 'error', (err) ->
     msg = switch err.code
-      when 'ENOENT' then "#{err.code} (File not found)"
-      when 'EPIPE' then "#{err.code} (Writing to closed pipe)"
+      when 'ENOENT' then "File not found"
+      when 'EPIPE' then "Writing to closed pipe"
       else err.code
 
-    repl_lib.print "Error: #{task_name} #{err.code} #{msg}"
+    util.log_error "Error: #{task_name} #{err.code} #{msg}"
 
     proc.on 'close', (code, signal) ->
       print_process_status task_name, code, signal
