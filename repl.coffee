@@ -163,7 +163,7 @@ module.exports =
     repl = nodeREPL.start opts
     REPL = repl
 
-    patch_repl_tab_complete repl
+    # patch_repl_tab_complete repl
 
     setup_keybindings repl
     addHistory repl, opts.historyFile, opts.historyMaxInputSize if opts.historyFile
