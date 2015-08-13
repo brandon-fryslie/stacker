@@ -19,7 +19,7 @@ export TERM=xterm-256color"""
 
 # Run a command
 # ([string], string, map) -> child_process
-run_cmd = (cmd, cwd, env) ->
+run_cmd = (cmd, cwd=process.cwd(), env=GET_ENV()) ->
   child = child_process.spawn 'zsh', [],
     cwd: cwd
     env: env
@@ -295,6 +295,11 @@ start_task = (task_name, env=CURRENT_ENV) ->
     kill_tree proc.pid
     delete PROCS[task_name]
 
+  if _.isFunction(env.onClose)
+    proc.on 'close', (code, signal) ->
+      repl_lib.print "Running exit commands for #{task_name.cyan}...".yellow
+      env.onClose.call env, code, signal
+
   pipe_to_std_streams = (prefix, task_proc) ->
     prefix = util.get_color_fn()("#{prefix}:")
     util.pipe_with_prefix prefix, task_proc.stdout, process.stdout
@@ -517,6 +522,7 @@ boot_stack = (tasks, should_start_repl) ->
 module.exports =
   start_task: start_task
   run_tasks: run_tasks
+  run_cmd: run_cmd
   boot: boot_stack
   register_task_config: register_task_config
   set_env: SET_ENV

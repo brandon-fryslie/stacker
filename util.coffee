@@ -85,10 +85,10 @@ pipe_with_prefix = (prefix, from, to) ->
 regex_extract = (regex, str) ->
   data = regex.exec str
   unless data
-    die 'Could not find match in', regex, str
+    error 'Could not find match in', regex, str
   [match, group1] = data
   unless group1
-    die 'Could not find match for group in', regex, str
+    error 'Could not find match for group in', regex, str
   group1
 
 clone_apply = (obj1, obj2) ->

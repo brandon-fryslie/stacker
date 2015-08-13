@@ -4,6 +4,8 @@ repl_lib = require './repl'
 _ = require 'lodash'
 fs = require 'fs'
 
+{run_cmd} = require './stacker'
+
 task_config =
   marshmallow: (env) ->
     name: 'Marshmallow'
@@ -212,6 +214,15 @@ task_config =
     callback: (a,b,c) ->
       repl_lib.print 'error'
       repl_lib.print a,b,c
+
+  'test-on-close': (env) ->
+    name: 'TestOnClose'
+    command: ['./display-after-1-second.sh', 'Hi There!']
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test close callback'
+    wait_for: /The/
+    onClose: (code, signal) ->
+      run_cmd ['echo', 'Exit command successfully run!']
 
 module.exports =
   task_config
