@@ -126,9 +126,9 @@ task_config =
 
   pigeon: (env) ->
     command = if env['pigeon-profile'].length is 0
-      ['lein', 'run']
+      ['lein', 'do', 'start-docker-oracle,', 'run']
     else
-      ['lein', 'with-profile', env['pigeon-profile'], 'run']
+      ['lein', 'with-profile', env['pigeon-profile'], 'do', 'start-docker-oracle,', 'run']
 
     name: 'Pigeon'
     alias: 'p'
@@ -138,12 +138,15 @@ task_config =
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       STACK: env.schema
+      DOCKER_HOST: "tcp://bld-docker-06:4243"
     wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
     callback: (data, env) ->
       [match, exception] = data
       if exception
         util.error 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
       env
+    onClose: (code, signal) ->
+      run_cmd ['lein', 'stop-docker-oracle'], this.cwd, this.additional_env
 
   "mock-pigeon": (env) ->
     name: 'MockPigeon'
