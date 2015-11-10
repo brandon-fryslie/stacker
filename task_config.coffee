@@ -124,11 +124,26 @@ task_config =
         util.error 'Error: ALM failed to connect to Marshmallow', data.input ? data
       env
 
+  'docker-oracle': (env) ->
+    name: 'Docker Oracle'
+    alias: 'do'
+    command: ['lein', 'start-docker-oracle']
+    exit_command: ['lein', 'stop-docker-oracle']
+    cwd: "#{rally.ROOTDIR}/pigeon"
+    additional_env:
+      DOCKER_HOST: "tcp://bld-docker-06:4243"
+    wait_for: /WRITING JDBC CONFIG|(Conflict)/
+    callback: (data, env) ->
+      [match, exception] = data
+      if exception
+        util.error 'Warning: Conflict trying to create new oracle docker container.  Delete the old one'.yellow, data.input ? data
+      env
+
   pigeon: (env) ->
     command = if env['pigeon-profile'].length is 0
-      ['lein', 'do', 'start-docker-oracle,', 'run']
+      ['lein', 'run']
     else
-      ['lein', 'with-profile', env['pigeon-profile'], 'do', 'start-docker-oracle,', 'run']
+      ['lein', 'with-profile', env['pigeon-profile'], 'run']
 
     name: 'Pigeon'
     alias: 'p'
@@ -138,15 +153,12 @@ task_config =
     additional_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       STACK: env.schema
-      DOCKER_HOST: "tcp://bld-docker-06:4243"
     wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
     callback: (data, env) ->
       [match, exception] = data
       if exception
         util.error 'Warning: Pigeon failed to connect to Marshmallow'.yellow, data.input ? data
       env
-    onClose: (code, signal) ->
-      run_cmd ['lein', 'stop-docker-oracle'], this.cwd, this.additional_env
 
   "mock-pigeon": (env) ->
     name: 'MockPigeon'
@@ -170,6 +182,21 @@ task_config =
     wait_for: /Server running at: http:\/\/([\w.:]+)/
     callback: (data, env) ->
       [match, burro_address] = data
+      env
+
+  'realtime-nginx': (env) ->
+    name: 'realtime-nginx'
+    alias: 'rn'
+    command: ['realtime-nginx']
+    start_message: "on #{'127.0.0.1:8855'.magenta}#{if env.with_local_churro then " with local #{'churro'.cyan}" else ''}."
+    cwd: "#{rally.ROOTDIR}/burro"
+    wait_for: /Started/
+    exit_command: ['nginx', '-s', 'stop']
+    callback: (data, env) ->
+      [match, pid, nginx_conf] = data
+
+      console.log 'SUCCESS HANDLER Started realtime nginx!!!'.magenta.bold
+
       env
 
   hydra: (env) ->
@@ -219,7 +246,27 @@ task_config =
     start_message: 'test close callback'
     wait_for: /The/
     onClose: (code, signal) ->
-      run_cmd ['echo', 'Exit command successfully run!']
+      run_cmd cmd: ['echo', 'Exit command successfully run!']
+
+  'test-daemon': (env) ->
+    name: 'Test Daemon'
+    alias: 'td'
+    command: ['echo', 'Started all the test infrastructures!!']
+    exit_command: ['echo', 'Shutting all the shit down!']
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test daemon procs'
+    onClose: (code, signal) ->
+      run_cmd cmd: ['echo', 'Exit command run!']
+
+  'test-clone': (env) ->
+    name: 'Test Clone'
+    alias: 'tc'
+    command: ['echo', 'Started all the test infrastructures!!']
+    exit_command: ['rm', '-rf', "#{rally.ROOTDIR}/ops-dashboard"]
+    cwd: "#{rally.ROOTDIR}/ops-dashboard"
+    start_message: 'test daemon procs'
+    onClose: (code, signal) ->
+      run_cmd cmd: ['echo', 'Exit command run!']
 
 module.exports =
   task_config

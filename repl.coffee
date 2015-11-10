@@ -29,7 +29,7 @@ ALIAS = {}
 resolve_command_name = (command) -> ALIAS[command] ? command
 
 replDefaults =
-  prompt: '> ',
+  prompt: '> '
   historyFile: path.join(process.env.HOME, '.stacker_history') if process.env.HOME
   historyMaxInputSize: 10240
   ignoreUndefined: true
@@ -151,6 +151,8 @@ module.exports =
 
   print: util.repl_print
   start_progress_indicator: start_progress_indicator
+
+  clear_line: -> REPL.rli.clearLine(process.stdin, 0)
 
   start: (opts = {}) ->
     [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n)

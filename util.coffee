@@ -32,6 +32,14 @@ log_error = (msg...) ->
   msg = color_array msg, 'red'
   repl_print.apply this, msg
 
+log_proc_error = (err) ->
+  msg = switch err.code
+    when 'ENOENT' then "File not found"
+    when 'EPIPE' then "Writing to closed pipe"
+    else err.code
+
+  log_error "Error: #{task_name} #{err.code} #{msg}"
+
 # color an array of strings
 color_array = (array, color) ->
   for s in array
@@ -76,6 +84,13 @@ create_prefix_stream_transformer = (prefix) ->
 
 pipe_with_prefix = (prefix, from, to) ->
   from.pipe(create_prefix_stream_transformer(prefix)).pipe(to)
+
+prefix_pipe_output = (prefix, task_proc) ->
+  # console.log 'task_proc',
+  prefix = get_color_fn()("#{prefix}:")
+  pipe_with_prefix prefix, task_proc.stdout, process.stdout
+  pipe_with_prefix prefix, task_proc.stderr, process.stderr
+
 ##########################################
 #  / stream coloring
 ##########################################
@@ -103,6 +118,8 @@ module.exports =
   die: die
   error: error
   log_error: log_error
+  log_proc_error: log_proc_error
+  prefix_pipe_output: prefix_pipe_output
   repl_print: repl_print
   trim: trim
   color_array: color_array

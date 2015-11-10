@@ -5,7 +5,7 @@ task_config = require './task_config'
 
 opts = nomnom
 .printer((str) ->
-  console.log "\nUsage: ./boot-realtime #{ "[#{Object .keys(task_config).join('] [')}] ".cyan} #{'[options]'.bold.green}\n"
+  console.log "\nUsage: ./boot-realtime #{ "[#{Object.keys(task_config).join('] [')}] ".cyan} #{'[options]'.bold.green}\n"
   console.log 'Options'.bold.green
   console.log options_str = str.split('\n')[4..].join('\n')
   process.exit 0
