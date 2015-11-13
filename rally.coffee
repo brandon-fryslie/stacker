@@ -42,11 +42,6 @@ get_tasks_to_start = (tasks, opts) ->
     if indexOfAlm > -1
       tasks.splice(indexOfAlm, 0, 'burro')
 
-  if opts['with-local-churro'] && !_.contains(tasks, 'churro-webpack')
-    indexOfAlm = tasks.indexOf('alm')
-    if indexOfAlm > -1
-      tasks.splice(indexOfAlm + 1, 0, 'churro-webpack')
-
   tasks
 
 # Shorthands for service names

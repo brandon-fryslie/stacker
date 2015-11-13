@@ -376,8 +376,7 @@ repl_lib.add_command
 #
 # Starts all tasks, waiting until each previous task finishes starting
 # before continuing
-# TODO:
-# play sound when all tasks have run
+#
 ################################################################################
 resolve_task_name = (task) -> TASK_ALIAS_MAP[task] ? task
 
@@ -423,7 +422,7 @@ repl_lib.add_command
   usage: 'set [KEY] [VALUE]'
   fn: (k='', v='') ->
     unless k.length > 0 and v.length > 0
-      repl_lib.print this.help.split('\n')[0]
+      repl_lib.print @help.split('\n')[0]
       return
 
     repl_lib.print 'setting'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
@@ -494,7 +493,7 @@ stacker_exit = (repl) ->
   kill_running_tasks().then ->
     repl_lib.print 'Killed running tasks!'.green
 
-    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split(' ')
+    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split ' '
     _.map words, (word) ->
       setTimeout (-> repl.outputStream.write "#{word.blue.bold} "), t += delta
 

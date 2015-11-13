@@ -162,35 +162,14 @@ task_config =
       env
 
   burro: (env) ->
-    command = ['npm', 'run', 'dev']
-    command.push("#{rally.ROOTDIR}/churro") if env.with_local_churro
     name: 'Burro'
     alias: 'b'
-    command: command
-    start_message: "on #{'127.0.0.1:8855'.magenta}#{if env.with_local_churro then " with local #{'churro'.cyan}" else ''}."
+    command: ['npm', 'run', 'dev']
+    start_message: "on #{'127.0.0.1:8855'.magenta} with local #{'churro'.cyan}."
     cwd: "#{rally.ROOTDIR}/burro"
     wait_for: /Server running at: http:\/\/([\w.:]+)/
     callback: (data, env) ->
       [match, burro_address] = data
-      env
-
-  "churro-webpack": (env) ->
-    name: 'Churro WebpackDevServer'
-    alias: 'cwpds'
-    command: ['grunt', 'webpack-dev-server']
-    start_message: "on #{'127.0.0.1:1337'.magenta}"
-    cwd: "#{rally.ROOTDIR}/churro"
-    check: ->
-      isNodeTen = parseInt(process.versions.node.split?('.')?[1]) is 10
-
-      unless isNodeTen
-        util.log_error 'Warning: this task is only compatible with node v0.10.'
-
-      isNodeTen
-    wait_for: /webpack-dev-server on port (\d+)/
-    callback: (data, env) ->
-      [match, webpack_port] = data
-      env.webpack_address = "localhost:#{webpack_port}"
       env
 
   hydra: (env) ->
