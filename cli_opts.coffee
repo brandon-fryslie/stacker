@@ -5,7 +5,7 @@ task_config = require './task_config'
 
 opts = nomnom
 .printer((str) ->
-  console.log "\nUsage: ./boot-realtime #{ "[#{Object.keys(task_config).join('] [')}] ".cyan} #{'[options]'.bold.green}\n"
+  console.log "\nUsage: stacker #{ "[#{Object.keys(task_config).join('] [')}] ".cyan} #{'[options]'.bold.green}\n"
   console.log 'Options'.bold.green
   console.log options_str = str.split('\n')[4..].join('\n')
   process.exit 0
@@ -30,11 +30,7 @@ opts = nomnom
   flag: true
 )
 .option('with-local-churro'
-  help: 'Use local churro at ~/projects/churro'
-  flag: true
-)
-.option('with-local-burro'
-  help: 'Use local burro at localhost:8855'
+  help: 'Use local churro at ~/projects/churro (starts burro too)'
   flag: true
 )
 .option('quiet'
@@ -44,6 +40,10 @@ opts = nomnom
 )
 .option('no-repl'
   help: 'do not start repl'
+  flag: true
+)
+.option('ignore-running-daemons'
+  help: 'skip all is_running checks on daemons'
   flag: true
 )
 .option('schema'

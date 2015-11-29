@@ -3,8 +3,9 @@ util = require './util'
 repl_lib = require './repl'
 _ = require 'lodash'
 fs = require 'fs'
+Q = require 'q'
 
-{run_cmd} = require './stacker'
+{run_cmd} = require './stacker-lib'
 
 task_config =
   marshmallow: (env) ->
@@ -96,7 +97,7 @@ task_config =
     if env.with_local_app_catalog
       additional_env['APP_CATALOG_PATH'] = "#{rally.ROOTDIR}/app-catalog"
 
-    if env.with_local_burro
+    if env.with_local_churro
       additional_env['BURRO_URL'] = env.burro_address
 
     msg = "on #{'127.0.0.1:7001'.magenta}"
@@ -128,10 +129,34 @@ task_config =
     name: 'Docker Oracle'
     alias: 'do'
     command: ['lein', 'start-docker-oracle']
-    exit_command: ['lein', 'stop-docker-oracle']
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
       DOCKER_HOST: "tcp://bld-docker-06:4243"
+      DEV_MODE: true
+
+    exit_command: ['lein', 'stop-docker-oracle']
+    # -> (Promise -> boolean)
+    is_running: ->
+      container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
+
+      util.repl_print "Looking for docker container #{container_name.cyan}..."
+
+      run_cmd
+        cmd: ['docker', 'ps', '-a', '|', 'grep', container_name]
+        cwd: @cwd
+        pipe_output: false
+      .close_promise.then ([code, signal]) ->
+        code is 0
+
+    cleanup: ->
+      container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
+
+      run_cmd
+        cmd: ["docker ps -a | grep #{container_name} | awk '{print $1}' | xargs docker rm -f"]
+        cwd: @cwd
+        pipe_output: false
+      .close_promise
+
     wait_for: /WRITING JDBC CONFIG|(Conflict)/
     callback: (data, env) ->
       [match, exception] = data
@@ -188,15 +213,20 @@ task_config =
     name: 'realtime-nginx'
     alias: 'rn'
     command: ['realtime-nginx']
-    start_message: "on #{'127.0.0.1:8855'.magenta}#{if env.with_local_churro then " with local #{'churro'.cyan}" else ''}."
+    start_message: "on #{'rally.dev:8999'.magenta}."
     cwd: "#{rally.ROOTDIR}/burro"
     wait_for: /Started/
+    is_running: ->
+      run_cmd
+        cmd: ["ps -ax | grep -v grep |  grep realtime-nginx-conf"]
+        cwd: @cwd
+        pipe_output: false
+      .close_promise.then ([code, signal]) ->
+        code is 0
+
     exit_command: ['nginx', '-s', 'stop']
     callback: (data, env) ->
       [match, pid, nginx_conf] = data
-
-      console.log 'SUCCESS HANDLER Started realtime nginx!!!'.magenta.bold
-
       env
 
   hydra: (env) ->
@@ -217,7 +247,7 @@ task_config =
   test: (env) ->
     name: 'Test'
     alias: 't'
-    command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/boot-realtime"]
+    command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
     start_message: 'Testing a basic task...'
     wait_for: /stacker/
 
@@ -253,6 +283,28 @@ task_config =
     alias: 'td'
     command: ['echo', 'Started all the test infrastructures!!']
     exit_command: ['echo', 'Shutting all the shit down!']
+    is_running: -> Q.when false
+    cleanup: ->
+      repl_lib.print 'Cleaning things up!  For serious'.yellow
+      run_cmd
+        cmd: ['echo', 'Cleaning up after test daemon...']
+      .close_promise
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test daemon procs'
+    onClose: (code, signal) ->
+      run_cmd cmd: ['echo', 'Exit command run!']
+
+  'always-on-daemon': (env) ->
+    name: 'Test Daemon'
+    alias: 'aod'
+    command: ['echo', 'Started all the test infrastructures!!']
+    exit_command: ['echo', 'Shutting all the shit down!']
+    is_running: -> Q.when true
+    cleanup: ->
+      repl_lib.print 'Cleaning things up!  For serious'.yellow
+      run_cmd
+        cmd: ['echo', 'Cleaning up after test daemon...']
+      .close_promise
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'test daemon procs'
     onClose: (code, signal) ->

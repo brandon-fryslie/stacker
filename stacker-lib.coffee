@@ -30,6 +30,10 @@ run_cmd = ({cmd, task_name, cwd, env, silent, pipe_output}) ->
     cwd: cwd
     env: env
 
+  # augment with a promise
+  close_deferred = Q.defer()
+  proc.close_promise = close_deferred.promise
+
   proc.stdin.write(ZSHMIN + '\n')
   proc.stdin.write(cmd.join(' ') + '\n')
   proc.stdin.end()
@@ -44,13 +48,13 @@ run_cmd = ({cmd, task_name, cwd, env, silent, pipe_output}) ->
 
   proc.on 'close', (exit_code, signal) ->
     delete PROCS[child_id]
+    close_deferred.resolve [exit_code, signal]
 
   PROCS[child_id] = proc
 
   if pipe_output
-    prefix = util.get_color_fn()("#{child_id}:")
-    util.pipe_with_prefix prefix, proc.stdout, process.stdout
-    util.pipe_with_prefix prefix, proc.stderr, process.stderr
+    prefix = util.get_color_fn()(child_id)
+    util.prefix_pipe_output prefix, proc
 
   unless silent
     proc.on 'close', (exit_code, signal) ->
@@ -71,12 +75,14 @@ ENV_PROPERTY_BLACKLIST = [
   'alias'
   'command'
   'wait_for'
+  'exit_command'
+  'cleanup'
   'callback'
   'additional_env'
+  'is_running'
   'cwd'
   'check'
   'onClose'
-  'daemon'
 ]
 
 SET_ENV = (env) ->
@@ -251,6 +257,11 @@ wait_for_keypress = ->
   deferred.promise
 ############ / cloning shit ############
 
+################################################################################
+### Tasks
+################################################################################
+
+# Str, Map, Str, fn -> (Promise -> proc, new_env)
 start_foreground_task = (task_name, env, cwd, callback) ->
   [cmd, argv...] = env.command
 
@@ -288,8 +299,13 @@ start_foreground_task = (task_name, env, cwd, callback) ->
 
   deferred.promise
 
-# ({}, '', fn) -> Promise -> proc, new_env, code, signal
-start_wait_for_daemon = (env, cwd, callback) ->
+################################################################################
+### Daemons
+################################################################################
+
+
+# Str, Map, Str, fn -> (Promise -> proc, new_env, code, signal)
+start_wait_for_daemon = (task_name, env, cwd, callback) ->
   [cmd, argv...] = env.command
   wait_for_deferred = Q.defer()
 
@@ -305,10 +321,10 @@ start_wait_for_daemon = (env, cwd, callback) ->
       repl_lib.print "Started #{env.name}!".green
       wait_for_deferred.resolve new_env
     catch e
-      repl_lib.print "Failed to start #{env.name}!".bold.red, e
+      repl_lib.print "Failed to start #{env.name}!".bold.red, e.stack
       wait_for_deferred.resolve CURRENT_ENV
 
-  util.prefix_pipe_output "start-#{env.name}", mproc.proc
+  util.prefix_pipe_output "start-#{task_name}", mproc.proc
 
   proc_deferred = Q.defer()
   mproc.proc.on 'close', (code, signal) ->
@@ -319,19 +335,20 @@ start_wait_for_daemon = (env, cwd, callback) ->
   proc_deferred.promise.then ([code, signal]) ->
 
     unless code is 0
-      throw 'Error! non zero exit code starting daemon ' + task_name
+      throw [new Error "Error! Failed to start daemon #{task_name.cyan}", code, signal]
 
     unless wait_for_deferred.promise.inspect().state is 'fulfilled'
-      throw 'Error!'
+      throw [new Error 'Error! Daemon start process exited before expected output', code, signal]
 
     wait_for_deferred.promise.then (new_env) ->
       [mproc.proc, new_env, code, signal]
 
-  .fail (err) ->
-    console.log 'start wait for daemon ERROR!', err.stack
+  .fail ([err, code, signal]) ->
+    util.log_error err.message
+    [mproc.proc, env, code, signal]
 
-# ({}, '', fn) -> Promise -> proc, new_env, code, signal
-start_standard_daemon = (env, cwd, callback) ->
+# Str, Map, Str, fn -> (Promise -> proc, new_env, code, signal)
+start_standard_daemon = (task_name, env, cwd, callback) ->
   [cmd, argv...] = env.command
 
   deferred = Q.defer()
@@ -342,16 +359,16 @@ start_standard_daemon = (env, cwd, callback) ->
 
   PROCS[task_name] = proc
 
-  util.pipe_with_prefix "start-#{env.name}", proc
+  util.prefix_pipe_output "start-#{task_name}", proc
 
   proc.on 'close', (code, signal) ->
     try
-      new_env = callback(data, env) # throws
+      new_env = callback({}, env) # throws
       repl_lib.print "Started #{env.name}!".green # figure out how to move this back to start_daemon_task
       delete PROCS[task_name]
     catch e
       new_env = CURRENT_ENV
-      repl_lib.print "Failed to start #{env.name}!".bold.red, e
+      repl_lib.print "Failed to start #{env.name}!".bold.red, e.stack
 
     deferred.resolve [proc, new_env, code, signal]
 
@@ -361,30 +378,66 @@ start_standard_daemon = (env, cwd, callback) ->
 
   deferred.promise
 
+# Str, StackerENV, Str, Fn -> (Promise -> [proc, new_env, code, signal])
+#
+# Main entry point for starting daemon tasks
+#
+# I understand this is horrible
+#
+# Will check if the daemon task is already running according to
+# the 'is_running' task config property
 start_daemon_task = (task_name, env, cwd, callback) ->
   [cmd, argv...] = env.command
 
-  promise = if env.wait_for?
-    start_wait_for_daemon env, cwd, callback
-  else
-    start_standard_daemon env, cwd, callback
+  # i hate stuff like this
+  _start_daemon_task = ->
 
-  promise.then (results) ->
-    [proc, new_env, code, signal] = results
+    promise = if env.wait_for?
+      start_wait_for_daemon task_name, env, cwd, callback
+    else
+      start_standard_daemon task_name, env, cwd, callback
 
-    SET_ENV env
+    promise.then (results) ->
+      [proc, new_env, code, signal] = results
 
-    # print_process_status "start-#{task_name}", code, signal
+      SET_ENV new_env
 
-    DAEMONS[task_name] = env
+      DAEMONS[task_name] = env
 
-    delete PROCS[task_name]
+      delete PROCS[task_name]
 
-    [proc, new_env, code, signal]
+      [proc, new_env, code, signal]
+    .fail (err) ->
+      repl_lib.print '%%%%%%%%%%%%%%%%%%%'.red, err.stack
+
+  if env.ignore_running_daemons
+    repl_lib.print 'Skipping check to see if daemon is already running'.yellow
+    return _start_daemon_task()
+
+  repl_lib.print "Checking to see if #{task_name.cyan} is already running..."
+
+  env.is_running.call(env).then (is_running) ->
+    if is_running
+      repl_lib.print "Found running #{task_name}!".green
+      DAEMONS[task_name] = env
+      Q.when [null, env, null, null] # refactor time
+    else
+      repl_lib.print "Did not find running #{task_name.cyan}.  Starting..."
+      _start_daemon_task()
+
   .fail (err) ->
-    console.log '%%%%%%%%%%%%%%%%%%%', err.stack
+    repl_lib.print '%%%%%%%%%%%%%%%%%%%'.red, err.stack
 
-start_task = (task_name, env=CURRENT_ENV) ->
+################################################################################
+### / Daemons
+################################################################################
+
+# Main fn of program.
+# Pulls task config, gets shell env, prints some stuff, decides how to
+# start the process, then starts it
+#
+# Str, StackerENV -> (Promise -> StackerENV)
+start_task = (task_name) ->
   deferred = Q.defer()
 
   unless task_name
@@ -396,7 +449,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
     util.log_error "Task does not exist: #{task_name}"
     return Q()
 
-  env = GET_OPTS_FOR_TASK(task_name, env)
+  env = GET_OPTS_FOR_TASK(task_name, CURRENT_ENV)
 
   if env.check?
     if !env.check()
@@ -405,6 +458,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
     else
       util.repl_print "Task #{task_name} passed prestart check".green
 
+  # this needs refactored out, we need to do the daemon.is_running check before we print this
   repl_lib.print "Starting #{task_name.cyan}".yellow
 
   repl_lib.print '$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env.additional_env).join(' '), "#{env.command.join(' ')}".green
@@ -420,6 +474,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
   catch e
     repo_name = env.cwd.replace(/.*\/([\w\-_]+)$/, '$1')
     return try_to_clone task_name, repo_name
+  # / clone
 
   promise = if env.exit_command?
     start_daemon_task task_name, env, cwd, callback
@@ -437,6 +492,7 @@ start_task = (task_name, env=CURRENT_ENV) ->
 ################################################################################
 #  Kill task
 ################################################################################
+# Int, Str -> ?
 kill_tree = (pid, signal='SIGKILL') ->
   psTree = require('ps-tree')
   psTree pid, (err, children) ->
@@ -446,22 +502,35 @@ kill_tree = (pid, signal='SIGKILL') ->
       catch e
         # util.error 'Error: Trying to kill', e.stack
 
-kill_daemon_task = (task_name, daemon) ->
-  deferred = Q.defer()
+# Str, TaskConfig -> Promise
+kill_daemon_task = (task_name, task_config) ->
+  repl_lib.print "Checking if #{task_name.cyan} is running..."
 
-  repl_lib.print "Running exit command for #{task_name.cyan}...".yellow
+  _kill_daemon_task = ->
+    repl_lib.print "#{'Killing daemon'.yellow} #{task_name.cyan}#{'...'.yellow}"
 
-  kill_proc = run_cmd
-    task_name: task_name
-    cmd: daemon.exit_command
-    env: daemon
+    run_cmd
+      cmd: task_config.exit_command
+      env: GET_ENV task_config.additional_env
+      cwd: task_config.cwd
+    .close_promise.then ([exit_code, signal]) ->
+      if exit_code is 0
+        repl_lib.print "Stopped daemon #{task_name.cyan}".green + " successfully!".green
+        delete DAEMONS[task_name]
+      else
+        repl_lib.print "Failed to stop daemon #{task_name.cyan}".yellow + ".  Maybe already dead?".yellow
 
-  kill_proc.on 'close', (exit_code, signal) ->
-    print_process_status task_name, exit_code, signal
-    delete DAEMONS[task_name]
+  if task_config.ignore_running_daemons
+    return _kill_daemon_task()
 
-  deferred.promise
+  task_config.is_running().then (is_running) ->
+    if is_running
+      _kill_daemon_task()
+    else
+      repl_lib.print "#{task_name.cyan} already dead!"
+      delete DAEMONS[task_name]
 
+# Str, ChildProcess -> Promise
 kill_foreground_task = (task_name, proc) ->
   deferred = Q.defer()
 
@@ -473,6 +542,7 @@ kill_foreground_task = (task_name, proc) ->
 
   deferred.promise
 
+# Str -> Promise
 kill_task = (task_name) ->
   deferred = Q.defer()
 
@@ -500,11 +570,10 @@ repl_lib.add_command
   usage:'kill [TASK]'
   fn: kill_task
 
+# -> Promise
 kill_running_tasks = ->
   repl_lib.print "Killing all tasks...".yellow
-  Q.all _(DAEMONS).keys().map(kill_task).value()
-  .then ->
-    _(PROCS).keys().map(kill_task).value()
+  Q.all _(PROCS).keys().map(kill_task).value()
 
 repl_lib.add_command
   name: 'killall'
@@ -538,6 +607,7 @@ run_tasks = (tasks, initial_env=CURRENT_ENV) ->
   final = tasks.reduce (previous, task) ->
     previous.then((env) ->
       start_task(task, env)
+      ### FIX HERE ###
     , (error) ->
       util.error 'Error handler:', error.stack
     ).fail (error) ->
@@ -628,6 +698,38 @@ repl_lib.add_command
     _.map targets, (target) -> tell_target target, cmd
 
 ################################################################################
+# REPL CLEANUP
+#
+# do something cleanup!
+#
+# usage: cleanup [TARGET(S)]
+# e.g. cleanup docker-oracle
+#
+################################################################################
+# (string, [string]) -> null
+cleanup_task = (target) ->
+  task_name = RESOLVE_TASK_NAME target
+
+  unless TASK_CONFIG[task_name]?
+    util.log_error "Task does not exist: #{task_name}"
+    return Q()
+
+  task_config = GET_OPTS_FOR_TASK(task_name)
+
+  task_config.cleanup.call(task_config).then ([code, signal]) ->
+    if code is 0
+      repl_lib.print "#{'Cleaned up'.green} #{task_name.cyan} #{'successfully!'.green}"
+    else
+      repl_lib.print "#{'Clean up task failed for'.yellow} #{task_name.cyan}#{'.'.yellow}"
+
+repl_lib.add_command
+  name: 'cleanup'
+  alias: 'cu'
+  help: 'run cleanup for a task'
+  usage: 'cleanup [TASK]'
+  fn: cleanup_task
+
+################################################################################
 # tasks
 #
 # print all tasks
@@ -660,6 +762,7 @@ stacker_exit = (repl) ->
 ################################################################################
 boot_stack = (tasks, should_start_repl) ->
   repl_lib.print 'VERBOSE MODE'.red if CURRENT_ENV.verbose
+  repl_lib.print 'IGNORE RUNNING DAEMONS: ON'.yellow if CURRENT_ENV.ignore_running_daemons
 
   if should_start_repl
     repl_lib.print 'Starting REPL'.bold.green

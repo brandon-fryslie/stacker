@@ -38,9 +38,14 @@ get_tasks_to_start = (tasks, opts) ->
   tasks = _.map(tasks, resolve_task_name)
 
   if opts['with-local-churro'] && !_.contains(tasks, 'burro')
-    indexOfAlm = tasks.indexOf('alm')
-    if indexOfAlm > -1
-      tasks.splice(indexOfAlm, 0, 'burro')
+    i = tasks.indexOf('alm')
+    if i > -1
+      tasks.splice(i, 0, 'burro')
+
+  if _.contains(tasks, 'pigeon') && !_.contains(tasks, 'docker-oracle')
+    i = tasks.indexOf('pigeon')
+    if i > -1
+      tasks.splice(i, 0, 'docker-oracle')
 
   tasks
 
@@ -59,7 +64,6 @@ resolve_task_name = (name) ->
 module.exports =
   get_schema_name: get_schema_name
   get_tasks_to_start: get_tasks_to_start
-  resolve_task_name: resolve_task_name
   ROOTDIR: ROOTDIR
   DEFAULT_BURRO_ADDRESS: DEFAULT_BURRO_ADDRESS
   BLD_ZOOKEEPER_ADDRESS: BLD_ZOOKEEPER_ADDRESS

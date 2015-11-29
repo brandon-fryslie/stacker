@@ -1,5 +1,7 @@
+_ = require 'lodash'
 require 'colors'
 stream = require 'stream'
+os = require 'os'
 
 # print something with a prefix
 prefix_print = (prefix, str...) ->
@@ -15,22 +17,22 @@ repl_print = (str...) ->
   str.unshift 'stacker:'.bgWhite.black
   prefix_print.apply @, str
 
-# kills the whole shebang.  probably don't use this
+# kills the whole shebang.  probably don't use @
 die = (msg...) ->
   msg = color_array msg, 'red'
   repl_print 'YOU DED'.red
-  repl_print.apply this, msg
+  repl_print.apply @, msg
   process.exit 1
 
 # throw exception and print error
 error = (msg...) ->
-  log_error.apply this, msg
+  log_error.apply @, msg
   throw new Error msg
 
 # only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  repl_print.apply this, msg
+  repl_print.apply @, msg
 
 log_proc_error = (err) ->
   msg = switch err.code
@@ -86,7 +88,6 @@ pipe_with_prefix = (prefix, from, to) ->
   from.pipe(create_prefix_stream_transformer(prefix)).pipe(to)
 
 prefix_pipe_output = (prefix, task_proc) ->
-  # console.log 'task_proc',
   prefix = get_color_fn()("#{prefix}:")
   pipe_with_prefix prefix, task_proc.stdout, process.stdout
   pipe_with_prefix prefix, task_proc.stderr, process.stderr
@@ -114,6 +115,8 @@ clone_apply = (obj1, obj2) ->
 
 trim = (s) -> s.replace /(^\s*)|(\s*$)/g, ''
 
+get_hostname = _.memoize -> os.hostname()
+
 module.exports =
   die: die
   error: error
@@ -127,3 +130,4 @@ module.exports =
   clone_apply: clone_apply
   pipe_with_prefix: pipe_with_prefix
   get_color_fn: get_color_fn
+  get_hostname: get_hostname
