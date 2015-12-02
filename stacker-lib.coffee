@@ -258,48 +258,6 @@ wait_for_keypress = ->
 ############ / cloning shit ############
 
 ################################################################################
-### Tasks
-################################################################################
-
-# Str, Map, Str, fn -> (Promise -> proc, new_env)
-start_foreground_task = (task_name, env, cwd, callback) ->
-  [cmd, argv...] = env.command
-
-  deferred = Q.defer()
-
-  mproc = mexpect.spawn cmd, argv,
-    verbose: false
-    env: GET_ENV env.additional_env
-    cwd: cwd
-
-  mproc.wait_for_once env.wait_for, (data) ->
-    data = env.wait_for.exec?(data) ? [data]
-    try
-      new_env = callback data, env
-      deferred.resolve [mproc.proc, new_env]
-      repl_lib.print "Started #{env.name}!".green
-    catch e
-      repl_lib.print "Failed to start #{env.name}!".bold.red, e
-
-  proc = mproc.proc
-
-  PROCS[task_name] = proc
-
-  util.prefix_pipe_output task_name, mproc.proc
-
-  proc.on 'close', (code, signal) ->
-    print_process_status task_name, code, signal
-    kill_tree proc.pid
-    delete PROCS[task_name]
-
-  if _.isFunction(env.onClose)
-    proc.on 'close', (code, signal) ->
-      repl_lib.print "Running exit commands for #{task_name.cyan}...".yellow
-      env.onClose.call env, code, signal
-
-  deferred.promise
-
-################################################################################
 ### Daemons
 ################################################################################
 
@@ -400,8 +358,6 @@ start_daemon_task = (task_name, env, cwd, callback) ->
     promise.then (results) ->
       [proc, new_env, code, signal] = results
 
-      SET_ENV new_env
-
       DAEMONS[task_name] = env
 
       delete PROCS[task_name]
@@ -431,6 +387,49 @@ start_daemon_task = (task_name, env, cwd, callback) ->
 ################################################################################
 ### / Daemons
 ################################################################################
+
+################################################################################
+### Tasks
+################################################################################
+
+# Str, Map, Str, fn -> (Promise -> proc, new_env)
+start_foreground_task = (task_name, env, cwd, callback) ->
+  [cmd, argv...] = env.command
+
+  deferred = Q.defer()
+
+  mproc = mexpect.spawn cmd, argv,
+    verbose: false
+    env: GET_ENV env.additional_env
+    cwd: cwd
+
+  mproc.wait_for_once env.wait_for, (data) ->
+    data = env.wait_for.exec?(data) ? [data]
+    try
+      new_env = callback data, env
+      deferred.resolve [mproc.proc, new_env]
+      repl_lib.print "Started #{env.name}!".green
+    catch e
+      repl_lib.print "Failed to start #{env.name}!".bold.red, e
+
+  proc = mproc.proc
+
+  PROCS[task_name] = proc
+
+  util.prefix_pipe_output task_name, mproc.proc
+
+  proc.on 'close', (code, signal) ->
+    print_process_status task_name, code, signal
+    kill_tree proc.pid
+    delete PROCS[task_name]
+
+  if _.isFunction(env.onClose)
+    proc.on 'close', (code, signal) ->
+      repl_lib.print "Running exit commands for #{task_name.cyan}...".yellow
+      env.onClose.call env, code, signal
+
+  deferred.promise
+
 
 # Main fn of program.
 # Pulls task config, gets shell env, prints some stuff, decides how to
@@ -482,12 +481,17 @@ start_task = (task_name) ->
     start_foreground_task task_name, env, cwd, callback
 
   promise.then ([proc, new_env, code, signal]) ->
+    SET_ENV new_env
     deferred.resolve new_env
   .fail (err) ->
     console.log 'starttask fail', err, err.stack
 
 
   deferred.promise
+
+################################################################################
+### Start Tasks
+################################################################################
 
 ################################################################################
 #  Kill task
@@ -607,7 +611,6 @@ run_tasks = (tasks, initial_env=CURRENT_ENV) ->
   final = tasks.reduce (previous, task) ->
     previous.then((env) ->
       start_task(task, env)
-      ### FIX HERE ###
     , (error) ->
       util.error 'Error handler:', error.stack
     ).fail (error) ->

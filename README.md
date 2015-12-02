@@ -91,3 +91,18 @@ callback: (data, env) ->
   env
 ```
 
+
+### testing
+
+there are no tests written, but there is a place where some tests can be written
+
+look in `~/projects/rally-stack/stacker/test/`
+
+you must have mocha: `npm install -g mocha`
+
+then
+
+```
+cd ~/projects/rally-stack/stacker
+mocha --compilers coffee:coffee-script/register
+```
