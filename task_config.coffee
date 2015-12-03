@@ -131,7 +131,7 @@ task_config =
     command: ['lein', 'start-docker-oracle']
     cwd: "#{rally.ROOTDIR}/pigeon"
     additional_env:
-      DOCKER_HOST: "tcp://bld-docker-06:4243"
+      DOCKER_HOST: "tcp://bld-docker-17:4243"
       DEV_MODE: true
 
     exit_command: ['lein', 'stop-docker-oracle']
