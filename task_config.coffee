@@ -142,8 +142,9 @@ task_config =
       util.repl_print "Looking for docker container #{container_name.cyan}..."
 
       run_cmd
-        cmd: ['docker', 'ps', '-a', '|', 'grep', container_name]
+        cmd: ["docker ps -a | grep #{container_name}"]
         cwd: @cwd
+        env: @additional_env
         pipe_output: false
       .close_promise.then ([code, signal]) ->
         code is 0
@@ -151,9 +152,12 @@ task_config =
     cleanup: ->
       container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
 
+      util.repl_print "Cleaning up docker container #{container_name}..."
+
       run_cmd
         cmd: ["docker ps -a | grep #{container_name} | awk '{print $1}' | xargs docker rm -f"]
         cwd: @cwd
+        env: @additional_env
         pipe_output: false
       .close_promise
 

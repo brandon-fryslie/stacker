@@ -22,7 +22,7 @@ export TERM=xterm-256color"""
 # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
 run_cmd = ({cmd, task_name, cwd, env, silent, pipe_output}) ->
   cwd ?= process.cwd()
-  env ?= GET_ENV()
+  env ?= GET_ENV env
   silent ?= false
   pipe_output ?= true
 
@@ -731,6 +731,41 @@ repl_lib.add_command
   help: 'run cleanup for a task'
   usage: 'cleanup [TASK]'
   fn: cleanup_task
+
+################################################################################
+# REPL IS_RUNNING
+#
+# check if running
+#
+# usage: running [TARGET(S)]
+# e.g. running docker-oracle
+#
+################################################################################
+# (string, [string]) -> null
+is_daemon_running = (target) ->
+  task_name = RESOLVE_TASK_NAME target
+
+  unless TASK_CONFIG[task_name]?
+    util.log_error "Task does not exist: #{task_name}"
+    return Q()
+
+  task_config = GET_OPTS_FOR_TASK(task_name)
+
+  stop_indicator = repl_lib.start_progress_indicator()
+
+  task_config.is_running.call(task_config).then (is_running) ->
+    stop_indicator()
+    if is_running
+      repl_lib.print "#{task_name.cyan} #{'is running'.green}"
+    else
+      repl_lib.print "#{task_name.cyan} #{'is not running'.green}"
+
+repl_lib.add_command
+  name: 'running'
+  alias: 'r?'
+  help: 'is daemon runnning?'
+  usage: 'running [TASK]'
+  fn: is_daemon_running
 
 ################################################################################
 # tasks
