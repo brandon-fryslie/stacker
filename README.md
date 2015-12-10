@@ -104,5 +104,5 @@ then
 
 ```
 cd ~/projects/rally-stack/stacker
-mocha --compilers coffee:coffee-script/register
+npm test
 ```

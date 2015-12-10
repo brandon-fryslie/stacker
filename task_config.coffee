@@ -1,11 +1,10 @@
 rally = require './rally'
-util = require './util'
-repl_lib = require './repl'
+util = require './util/util'
+repl_lib = require './lib/repl_lib'
 _ = require 'lodash'
 fs = require 'fs'
-Q = require 'q'
 
-{run_cmd} = require './stacker-lib'
+{run_cmd} = require './lib/task_lib'
 
 task_config =
   marshmallow: (env) ->
@@ -141,12 +140,13 @@ task_config =
 
       util.repl_print "Looking for docker container #{container_name.cyan}..."
 
-      run_cmd
+      mproc = run_cmd
         cmd: ["docker ps -a | grep #{container_name}"]
         cwd: @cwd
         env: @additional_env
         pipe_output: false
-      .close_promise.then ([code, signal]) ->
+
+      mproc.on_close.then ([code, signal]) ->
         code is 0
 
     cleanup: ->
@@ -159,7 +159,7 @@ task_config =
         cwd: @cwd
         env: @additional_env
         pipe_output: false
-      .close_promise
+      .on_close
 
     wait_for: /WRITING JDBC CONFIG|(Conflict)/
     callback: (data, env) ->
@@ -225,7 +225,7 @@ task_config =
         cmd: ["ps -ax | grep -v grep |  grep realtime-nginx-conf"]
         cwd: @cwd
         pipe_output: false
-      .close_promise.then ([code, signal]) ->
+      .on_close.then ([code, signal]) ->
         code is 0
 
     exit_command: ['nginx', '-s', 'stop']
@@ -273,6 +273,7 @@ task_config =
       repl_lib.print 'error'
       repl_lib.print a,b,c
 
+  # this is going away
   'test-on-close': (env) ->
     name: 'TestOnClose'
     command: ['./display-after-1-second.sh', 'Hi There!']
@@ -287,12 +288,12 @@ task_config =
     alias: 'td'
     command: ['echo', 'Started all the test infrastructures!!']
     exit_command: ['echo', 'Shutting all the shit down!']
-    is_running: -> Q.when false
+    is_running: -> Promise.resolve false
     cleanup: ->
       repl_lib.print 'Cleaning things up!  For serious'.yellow
       run_cmd
         cmd: ['echo', 'Cleaning up after test daemon...']
-      .close_promise
+      .on_close
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'test daemon procs'
     onClose: (code, signal) ->
@@ -303,16 +304,42 @@ task_config =
     alias: 'aod'
     command: ['echo', 'Started all the test infrastructures!!']
     exit_command: ['echo', 'Shutting all the shit down!']
-    is_running: -> Q.when true
+    is_running: -> Promise.resolve true
     cleanup: ->
       repl_lib.print 'Cleaning things up!  For serious'.yellow
       run_cmd
         cmd: ['echo', 'Cleaning up after test daemon...']
-      .close_promise
+      .on_close
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'test daemon procs'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']
+
+  'always-on-daemon': (env) ->
+    name: 'Test Daemon'
+    alias: 'aod'
+    command: ['echo', 'Started all the test infrastructures!!']
+    exit_command: ['echo', 'Shutting all the shit down!']
+    is_running: -> Promise.resolve true
+    cleanup: ->
+      repl_lib.print 'Cleaning things up!  For serious'.yellow
+      run_cmd
+        cmd: ['echo', 'Cleaning up after test daemon...']
+      .on_close
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test daemon procs'
+    onClose: (code, signal) ->
+      run_cmd cmd: ['echo', 'Exit command run!']
+
+  'fail-daemon': (env) ->
+    name: 'Fail Daemon'
+    alias: 'fd'
+    command: ["head #{module.filename}"]
+    wait_for: /Neva gonna happen/
+    exit_command: ['echo', 'Shutting all the shit down!']
+    is_running: -> Promise.resolve false
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test daemon procs'
 
   'test-clone': (env) ->
     name: 'Test Clone'

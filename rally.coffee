@@ -1,8 +1,8 @@
 _ = require 'lodash'
 fs = require 'fs'
 require 'colors'
-repl_lib = require './repl'
-util = require './util'
+repl_lib = require './lib/repl_lib'
+util = require './util/util'
 
 # Constants
 ROOTDIR = "#{process.env.HOME}/projects"

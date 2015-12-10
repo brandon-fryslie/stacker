@@ -4,16 +4,17 @@
   "description": "Boot your stack",
   "main": "stacker.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --compilers coffee:coffee-script/register"
   },
   "author": "Brandon Fryslie",
   "license": "ISC",
   "private": true,
   "dependencies": {
     "colors": "^1.0.3",
+    "es6-promise": "^3.0.2",
+    "lodash": "^3.2.0",
     "nexpect": "^0.5.0",
     "nomnom": "^1.8.1",
-    "q": "^1.1.2",
-    "lodash": "^3.2.0"
+    "q": "^1.1.2"
   }
 }

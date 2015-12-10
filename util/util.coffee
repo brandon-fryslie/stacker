@@ -47,6 +47,10 @@ color_array = (array, color) ->
   for s in array
     if typeof s is 'string' and s[color] then s[color] else s
 
+pretty_command_str = (command, additional_env={}) ->
+  ['$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of additional_env).join(' '), "#{command.join(' ')}".green].join(' ')
+
+
 ##########################################
 #  Pipe streams with a colored prefix
 ##########################################
@@ -96,6 +100,14 @@ prefix_pipe_output = (prefix, task_proc) ->
 #  / stream coloring
 ##########################################
 
+# wait for one key
+# then resolve a promise
+wait_for_keypress = ->
+  new Promise (resolve, reject) ->
+    process.stdin.once 'data', (char) ->
+      process.stdout.clearLine()
+      resolve char
+
 # extract first capture group from regex
 # (regex, string) -> string
 regex_extract = (regex, str) ->
@@ -117,17 +129,56 @@ trim = (s) -> s.replace /(^\s*)|(\s*$)/g, ''
 
 get_hostname = _.memoize -> os.hostname()
 
-module.exports =
-  die: die
-  error: error
-  log_error: log_error
-  log_proc_error: log_proc_error
-  prefix_pipe_output: prefix_pipe_output
-  repl_print: repl_print
-  trim: trim
-  color_array: color_array
-  regex_extract: regex_extract
-  clone_apply: clone_apply
-  pipe_with_prefix: pipe_with_prefix
-  get_color_fn: get_color_fn
-  get_hostname: get_hostname
+############ cloning shit ############
+try_to_clone = (task_name, repo_name) ->
+  new Promise (resolve, reject) ->
+    repl_lib.print "You don't have #{repo_name}.  Try cloning? [yn]".yellow
+    wait_for_keypress().then (char) ->
+      repl_lib.clear_line()
+      if char.toString() is 'y'
+        repl_lib.print 'Trying to clone...'.magenta
+        try
+          child = run_cmd
+            cmd: ['git', 'clone', "git@github.com:RallySoftware/#{repo_name}.git"]
+            cwd: "#{process.env.HOME}/projects"
+            env: GET_ENV()
+        catch e
+          repl_lib.print "error cloning repo #{repo_name}".red, e
+
+        child.on 'close', ->
+          repl_lib.print 'Cloned!'.green
+          resolve CURRENT_ENV
+          promise = start_task task_name, GET_OPTS_FOR_TASK(task_name, CURRENT_ENV)
+
+      else
+        repl_lib.print 'Not cloning'.magenta
+        resolve CURRENT_ENV
+
+############ / cloning shit ############
+
+ZSHMIN =
+  """ZSH=$HOME/.oh-my-zsh
+ZSH_CUSTOM=$HOME/.oh-my-zsh-custom
+ZSH_THEME="git-taculous"
+plugins=(emacs java alm appsdk git gls rally)
+source $ZSH/oh-my-zsh.sh
+export TERM=xterm-256color"""
+
+module.exports = {
+  die
+  error
+  log_error
+  log_proc_error
+  prefix_pipe_output
+  repl_print
+  trim
+  color_array
+  regex_extract
+  clone_apply
+  pipe_with_prefix
+  get_color_fn
+  get_hostname
+  wait_for_keypress
+  try_to_clone
+  pretty_command_str
+}

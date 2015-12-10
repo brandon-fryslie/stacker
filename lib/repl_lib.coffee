@@ -4,7 +4,7 @@ path = require 'path'
 vm = require 'vm'
 nodeREPL = require 'repl'
 _ = require 'lodash'
-util = require './util'
+util = require '../util/util'
 require 'colors'
 
 # global reference to the repl
