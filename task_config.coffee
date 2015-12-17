@@ -85,7 +85,9 @@ task_config =
 
   alm: (env) ->
     command = ['./gradlew', 'jettyRun']
-    additional_env = {}
+    additional_env =
+      MESSAGE_QUEUE_TYPE: 'KAFKA'
+      START_MARSHMALLOW: 'true'
 
     if env.zookeeper_address
       additional_env['ZOOKEEPER_CONNECT'] = env.zookeeper_address
@@ -99,24 +101,12 @@ task_config =
     if env.with_local_churro
       additional_env['BURRO_URL'] = env.burro_address
 
-    msg = "on #{'127.0.0.1:7001'.magenta}"
-
-    # check for symlinked churro + sombrero
-    try
-      stat = fs.lstatSync("#{process.env.WEBAPP_HOME}/node_modules/churro")
-      msg += if stat.isSymbolicLink() then " with symlinked #{'churro'.cyan}" else ''
-      try
-        stat = fs.lstatSync("#{process.env.WEBAPP_HOME}/node_modules/churro/node_modules/sombrero")
-        msg += if stat.isSymbolicLink() then " with symlinked #{'sombrero'.cyan}" else ''
-      catch e
-    catch e
-
     name: 'ALM'
     alias: 'a'
     command: command
-    start_message: msg
+    start_message: "on #{'127.0.0.1:7001'.magenta}"
     cwd: process.env.WEBAPP_HOME
-    additional_env: additional_env ? {}
+    additional_env: additional_env
     wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
     callback: (data, env) ->
       [match, timeout_error] = data
