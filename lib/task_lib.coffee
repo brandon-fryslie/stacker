@@ -127,13 +127,13 @@ start_foreground_task = (task_name, task_config, callback) ->
 # Run a command
 # if id is passed in, will prefix output with that
 # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
-run_cmd = ({cmd, id, cwd, additional_env, silent, pipe_output, close_stdin, direct}) ->
+run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
   cwd ?= process.cwd()
   silent ?= false
   pipe_output ?= true
   close_stdin ?= true
   direct ?= false
-  env = env_lib.get_shell_env additional_env
+  env = env_lib.get_shell_env env
 
   mproc = mexpect.spawn
     id: id
