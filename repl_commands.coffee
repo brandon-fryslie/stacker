@@ -3,6 +3,7 @@ proc_lib = require './lib/proc_lib'
 repl_lib = require './lib/repl_lib'
 task_lib = require './lib/task_lib'
 env_lib = require './lib/env_lib'
+task_config_lib = require './lib/task_config_lib'
 
 ################################################################################
 #  Process Status
@@ -124,7 +125,7 @@ tell_target = (target, cmd) ->
     repl_lib.print "'#{target}' is not a task name or a directory in ~/projects".red
     return
 
-  run_cmd
+  task_lib.run_cmd
     cmd: cmd
     cwd: path
 
@@ -173,6 +174,8 @@ is_daemon_running = (target) ->
   task_config = task_config_lib.get_task_config task_name
 
   stop_indicator = repl_lib.start_progress_indicator()
+
+  repl_lib.print "Checking to see if #{task_name.cyan} is running..."
 
   task_config.is_running.call(task_config).then (is_running) ->
     stop_indicator()

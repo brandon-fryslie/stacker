@@ -51,6 +51,10 @@ start_task = (task_name) ->
 
     task_name = task_config_lib.resolve_task_name task_name
 
+    if _(proc_lib.all_procs()).keys().contains(task_name) or _(proc_lib.all_daemons()).keys().contains(task_name)
+      util.repl_print task_name.cyan + ' is already running!'.yellow
+      return Promise.resolve()
+
     unless task_config_lib.task_exists task_name
       util.log_error "Task does not exist: #{task_name}"
       return Promise.resolve()
@@ -83,9 +87,6 @@ start_task = (task_name) ->
       start_foreground_task task_name, task_config, callback
 
     promise.then (new_env) ->
-      if task_config.start_message
-        repl_lib.print "start message: #{task_config.start_message}"
-
       env_lib.set_env new_env
       resolve new_env
     .catch (err) ->
@@ -107,56 +108,34 @@ start_task = (task_name) ->
 
 # Str, Map, Str, fn -> (Promise -> proc, new_env)
 start_foreground_task = (task_name, task_config, callback) ->
-  new Promise (resolve, reject) ->
-    mproc = start_process task_name, task_config
+  mproc = start_process task_name, task_config
 
-    mproc.wait_for_once task_config.wait_for, (data) ->
-      data = task_config.wait_for.exec?(data) ? [data]
-      try
-        new_env = callback data, env_lib.get_env()
-        resolve new_env
-        repl_lib.print "Started #{task_config.name}!".green
-      catch e
-        repl_lib.print "Failed to start #{task_config.name}!".bold.red, e
-        reject env_lib.get_env()
+  mproc.on_data(task_config.wait_for).then (data) ->
+    data = task_config.wait_for.exec?(data) ? [data]
+    try
+      new_env = callback data, env_lib.get_env()
 
-# I need a new 'run command' command
-#
-# N cases:
-#
-# 1.  running a standard 'task' command (no wait_for)
-#   pass in: cmd, cwd, env, control output
-#   receive: code, signal
-#
-# 2.  running a standard 'task' command (wait_for)
-#   pass in: cmd, cwd, env, wait_for, control output
-#   receive: data
-#
-# 3.  running a daemon 'task' command (no wait_for)
-#   pass in: cmd, cwd, env, control output
-#   receive: code, signal
-#
-# 4.  running a daemon 'task' command (wait_for)
-#   pass in: cmd, cwd, env, control output
-#   receive: code, signal, data
-#
-# returns
-#   a wrapper object that has
-#     proc: node process
-#     on_data - when wait_for matches
-#     on_close - when process exits
-#
+      if task_config.start_message
+        repl_lib.print "start message: #{task_config.start_message}"
+
+      repl_lib.print "Started #{task_config.name}!".green
+      return new_env
+    catch e
+      repl_lib.print "Failed to start #{task_config.name}!".bold
+      return env_lib.get_env()
 
 # Run a command
-# if task_name is passed in, will prefix output with that
+# if id is passed in, will prefix output with that
 # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
 run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
+  additional_env = env ? {}
+
   cwd ?= process.cwd()
-  env = env_lib.get_shell_env env
   silent ?= false
   pipe_output ?= true
   close_stdin ?= true
   direct ?= false
+  env = env_lib.get_shell_env additional_env
 
   mproc = mexpect.spawn
     id: id
@@ -172,7 +151,7 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
   mproc.proc.stderr.on 'readable', stop_indicator
   mproc.proc.stderr.on 'data', stop_indicator
 
-  child_id = id ? "#{util.regex_extract(/\/([\w-]+)$/, cwd)}-#{cmd.join('-')}-#{mproc.proc.pid}"
+  child_id = id ? "#{util.regex_extract(/\/([\w-]+)$/, cwd)}-#{cmd.join('-')}-#{mproc.proc.pid}".replace(/\s/g, '-')
 
   mproc.on_close.then ([exit_code, signal]) ->
     proc_lib.remove_proc child_id
@@ -184,14 +163,13 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
   proc_lib.add_proc child_id, mproc.proc
 
   if pipe_output
-    prefix = util.get_color_fn()(child_id)
-    util.prefix_pipe_output prefix, proc
+    util.prefix_pipe_output child_id, mproc.proc
 
   if close_stdin
     mproc.proc.stdin.end()
 
   unless silent
-    repl_lib.print util.pretty_command_str cmd, _.omit env, _.keys(process.env)
+    repl_lib.print util.pretty_command_str cmd, additional_env
 
   mproc
 
@@ -219,6 +197,10 @@ start_daemon_task = (task_name, task_config, callback) ->
         throw "Daemon start task exited with code #{code}"
 
       new_env = callback(data, env_lib.get_env()) # throws
+
+      if task_config.start_message
+        repl_lib.print "start message: #{task_config.start_message}"
+
       repl_lib.print "Started #{task_config.name}!".green
 
       proc_lib.add_daemon task_name, task_config
@@ -226,8 +208,9 @@ start_daemon_task = (task_name, task_config, callback) ->
       new_env
     .catch (err) ->
       util.log_error err
-      repl_lib.print "Failed to start #{task_config.name}!".bold.red
-      repl_lib.print err.stack if err.stack?
+      # console.log err
+      repl_lib.print "Failed to start #{task_config.name}!".red.bold
+      # repl_lib.print err.stack if err.stack?
 
   if task_config.ignore_running_daemons
     repl_lib.print 'Skipping check to see if daemon is already running'.yellow
@@ -244,6 +227,8 @@ start_daemon_task = (task_name, task_config, callback) ->
       repl_lib.print "Did not find running #{task_name.cyan}.  Starting..."
       _start_daemon_task()
 
+
+
   .catch (err) ->
     repl_lib.print '%%%%%%%%%%%%%%%%%%%'.red, err.stack
 
@@ -251,22 +236,20 @@ start_daemon_task = (task_name, task_config, callback) ->
 # (task_name, task_config) -> (Promise -> [data, code, signal])
 # for daemons
 run_mexpect_process = (task_name, task_config) ->
-  mproc = start_process task_name, task_config
-
-  util.prefix_pipe_output "start-#{task_name}", mproc.proc
+  mproc = start_process "start-#{task_name}", task_config
 
   promise = if task_config.wait_for?
     wait_for_promise = mproc.on_data(task_config.wait_for)
     mproc.on_close.then ([code, signal]) ->
 
       unless wait_for_promise._state # will be 1 if promise is fulfilled
-        throw "#{'Error! Failed to see expected output when starting'.red} #{task_name.cyan}"
+        throw new Error "#{'Failed to see expected output when starting'.red} #{task_name.cyan}"
 
       wait_for_promise.then (data) ->
         [data, code, signal]
 
   else
-    mproc.on_close.then (code, signal) -> [[], code, signal]
+    mproc.on_close.then ([code, signal]) -> [[], code, signal]
 
   promise.then (args) ->
     proc_lib.remove_proc task_name
@@ -282,15 +265,9 @@ start_process = (id, task_config) ->
     env: task_config.additional_env
     cwd: task_config.cwd
     verbose: false
-    pipe_output: false
     direct: true
 
-  mproc.on_close.then ->
-
-
-  util.prefix_pipe_output id, mproc.proc
-
-  mproc.proc.on 'error', util.log_proc_error
+  # mproc.proc.on 'error', util.log_proc_error
 
   mproc
 
@@ -314,14 +291,12 @@ kill_daemon_task = (task_name, task_config) ->
   _kill_daemon_task = ->
     repl_lib.print "#{'Killing daemon'.yellow} #{task_name.cyan}#{'...'.yellow}"
 
-    console.log 'killin gD TASK'
     run_cmd
       cmd: task_config.exit_command
       env: task_config.additional_env
       cwd: task_config.cwd
-    .on_close.then ->
-      console.log 'closed!!!', arguments
-      if exit_code is 0
+    .on_close.then ([code, signal]) ->
+      if code is 0
         repl_lib.print "Stopped daemon #{task_name.cyan}".green + " successfully!".green
         proc_lib.remove_daemon task_name
       else

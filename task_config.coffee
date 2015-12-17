@@ -241,6 +241,8 @@ task_config =
   test: (env) ->
     name: 'Test'
     alias: 't'
+    additional_env:
+      KAFKA_QUEUE_TYPE: 'NIGHTMARE'
     command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
     start_message: 'Testing a basic task...'
     wait_for: /stacker/
@@ -301,23 +303,7 @@ task_config =
         cmd: ['echo', 'Cleaning up after test daemon...']
       .on_close
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
-    start_message: 'test daemon procs'
-    onClose: (code, signal) ->
-      run_cmd cmd: ['echo', 'Exit command run!']
-
-  'always-on-daemon': (env) ->
-    name: 'Test Daemon'
-    alias: 'aod'
-    command: ['echo', 'Started all the test infrastructures!!']
-    exit_command: ['echo', 'Shutting all the shit down!']
-    is_running: -> Promise.resolve true
-    cleanup: ->
-      repl_lib.print 'Cleaning things up!  For serious'.yellow
-      run_cmd
-        cmd: ['echo', 'Cleaning up after test daemon...']
-      .on_close
-    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
-    start_message: 'test daemon procs'
+    start_message: 'daemon is always running'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']
 
@@ -329,7 +315,7 @@ task_config =
     exit_command: ['echo', 'Shutting all the shit down!']
     is_running: -> Promise.resolve false
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
-    start_message: 'test daemon procs'
+    start_message: 'should never see this!'
 
   'test-clone': (env) ->
     name: 'Test Clone'
