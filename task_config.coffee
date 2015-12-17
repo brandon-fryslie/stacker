@@ -301,7 +301,23 @@ task_config =
         cmd: ['echo', 'Cleaning up after test daemon...']
       .on_close
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
-    start_message: 'daemon is always running'
+    start_message: 'test daemon procs'
+    onClose: (code, signal) ->
+      run_cmd cmd: ['echo', 'Exit command run!']
+
+  'always-on-daemon': (env) ->
+    name: 'Test Daemon'
+    alias: 'aod'
+    command: ['echo', 'Started all the test infrastructures!!']
+    exit_command: ['echo', 'Shutting all the shit down!']
+    is_running: -> Promise.resolve true
+    cleanup: ->
+      repl_lib.print 'Cleaning things up!  For serious'.yellow
+      run_cmd
+        cmd: ['echo', 'Cleaning up after test daemon...']
+      .on_close
+    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    start_message: 'test daemon procs'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']
 
@@ -313,7 +329,7 @@ task_config =
     exit_command: ['echo', 'Shutting all the shit down!']
     is_running: -> Promise.resolve false
     cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
-    start_message: 'should never see this!'
+    start_message: 'test daemon procs'
 
   'test-clone': (env) ->
     name: 'Test Clone'

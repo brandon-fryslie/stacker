@@ -29,7 +29,7 @@ create_newline_transform_stream = ->
     @_lastLineData = lines.pop()
 
     for line in lines
-      @push "#{line}"
+      @push "#{line}\n"
 
   , ->
     if @_lastLineData?
@@ -43,9 +43,6 @@ create_prefix_transform_stream = (prefix) ->
 
 create_callback_transform_stream = (expectation, cb) ->
   create_transform_stream (line) ->
-    line = line.toString().replace(/\u001b\[\d{0,2}m/g, '')
-
-
     if expectation.test? and expectation.test(line) or line.toString().indexOf?(expectation) > -1
       data = expectation.exec?(line) ? [expectation]
       cb data
@@ -58,36 +55,30 @@ clone_apply = (obj1, obj2) ->
 
 class Mexpect
 
-  on_data: (expectations, cb) =>
-    expectations = [].concat expectations
-    output = []
+  wait_for: (expectation, cb) =>
+    nl_stream = create_newline_transform_stream()
+    cb_stream = create_callback_transform_stream expectation, cb
+    @proc.stdout.pipe(nl_stream).pipe(cb_stream)
+    @
 
-    final = expectations.reduce (previous, expectation) =>
-      previous.then =>
-        @_on_data_single(expectation).then (data) ->
-          output = output.concat data
-          data
-    , Promise.resolve()
+  wait_for_once: (expectation, cb) =>
+    @wait_for expectation, _.once cb
 
-    final.then (match) -> output
+  wait_for_err: (expectation, cb) =>
+    nl_stream = create_newline_transform_stream()
+    cb_stream = create_callback_transform_stream expectation, cb
+    @proc.stderr.pipe(nl_stream).pipe(cb_stream)
+    @
 
-  _on_data_single: (expectation, cb) ->
+  on_data: (expectation) ->
     new Promise (resolve, reject) =>
-      cb_stream = create_callback_transform_stream expectation, (matches) =>
-        @stdout.unpipe cb_stream
+      @wait_for_once expectation, (matches) ->
         resolve matches
-
-      @stdout.pipe cb_stream
-
 
   on_err: (expectation) ->
     new Promise (resolve, reject) =>
-      cb_stream = create_callback_transform_stream expectation, (matches) =>
-        @stderr.unpipe cb_stream
+      @wait_for_err expectation, (matches) ->
         resolve matches
-
-      @stderr.pipe cb_stream
-
 
   _spawn_bash: (cmd, cwd, env, opt) ->
     @proc = child_process.spawn 'bash', [],
@@ -125,9 +116,6 @@ class Mexpect
       @_spawn_direct cmd, cwd, env, opt
     else
       @_spawn_bash cmd, cwd, env, opt
-
-    @stdout = @proc.stdout.pipe create_newline_transform_stream()
-    @stderr = @proc.stderr.pipe create_newline_transform_stream()
 
     @on_close =
       new Promise (resolve, reject) =>
