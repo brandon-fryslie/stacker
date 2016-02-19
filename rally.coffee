@@ -35,19 +35,7 @@ get_schema_name = _.memoize ->
 
 # Start these tasks
 get_tasks_to_start = (tasks, opts) ->
-  tasks = _.map(tasks, resolve_task_name)
-
-  if opts['with-local-churro'] && !_.contains(tasks, 'burro')
-    i = tasks.indexOf('alm')
-    if i > -1
-      tasks.splice(i, 0, 'burro')
-
-  if _.contains(tasks, 'pigeon') && !_.contains(tasks, 'docker-oracle')
-    i = tasks.indexOf('pigeon')
-    if i > -1
-      tasks.splice(i, 0, 'docker-oracle')
-
-  tasks
+  _.map(tasks, resolve_task_name)
 
 # Shorthands for service names
 resolve_task_name = (name) ->
