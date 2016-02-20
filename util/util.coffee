@@ -8,7 +8,7 @@ prefix_print = (prefix, str...) ->
   str.splice 0, 0, prefix
 
   str = for s in str
-    "#{s}".split('\n').join("\n#{prefix} ")
+    "#{s}".split('\n').join("\r#{prefix} ")
 
   console.log.apply @, str
 
@@ -17,7 +17,7 @@ repl_print = (str...) ->
   str.unshift 'stacker:'.bgWhite.black
   prefix_print.apply @, str
 
-# kills the whole shebang.  probably don't use @
+# kills the whole shebang.  probably don't use this
 die = (msg...) ->
   msg = color_array msg, 'red'
   repl_print 'YOU DED'.red
@@ -76,7 +76,7 @@ create_prefix_stream_transformer = (prefix) ->
     @_lastLineData = lines.pop()
 
     for line in lines
-      @push "#{prefix} #{line}\n"
+      @push "\r#{prefix} #{line}\n"
 
     done()
 
