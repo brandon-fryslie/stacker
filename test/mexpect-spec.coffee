@@ -35,9 +35,7 @@ describe 'mexpect', ->
     mproc.on_data(/muffins/).then ([match]) ->
       assert.equal 'muffins', match
       mproc.on_data(/sugary/).then (match) ->
-        console.log 'balls'
         assert.equal match, 'sugary'
-
 
   it 'can wait for an array', ->
     cmd = "a quick brown fox jumps over the lazy dog".split(' ').map (s) ->

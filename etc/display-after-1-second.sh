@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 sleep 1
-echo ${1-balls}
+echo ${1-cheese}
