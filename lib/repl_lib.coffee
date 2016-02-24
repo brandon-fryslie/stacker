@@ -133,11 +133,8 @@ start_progress_indicator = ->
 
   timer = setInterval fn, 300
 
-  # return a function that can only be called once
-  # that kills the indicator and prints a newline
   _.once ->
     clearInterval timer
-    process.stdout.write '\n'
 
 module.exports =
   add_command: (command) ->
