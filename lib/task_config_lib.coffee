@@ -8,7 +8,7 @@ TASK_ALIAS_MAP = {}
 
 register_task_config = (task_config) ->
   for task_name, config of task_config
-    {alias} = config(env_lib.get_env())
+    {alias} = config(env_lib.get_stacker_env())
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
@@ -18,7 +18,7 @@ GET_OPTS_FOR_TASK = (task, env) ->
 # read a property from a task
 # (string, string) -> string
 read_task_property = (task, property) ->
-  TASK_CONFIG[task](env_lib.get_env())[property]
+  TASK_CONFIG[task](env_lib.get_stacker_env())[property]
 
 # does this task exist?
 # (string) -> boolean
@@ -35,4 +35,3 @@ module.exports =
   register_task_config: register_task_config
   get_task_config: GET_OPTS_FOR_TASK
   get_task_config_map: -> TASK_CONFIG
-

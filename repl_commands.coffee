@@ -78,7 +78,7 @@ repl_lib.add_command
   help: 'print information about your environment'
   fn: ->
     repl_lib.print 'ENV'.cyan.bold
-    repl_lib.print ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env_lib.get_env()).join('\n')
+    repl_lib.print ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env_lib.get_stacker_env()).join('\n')
 
 repl_lib.add_command
   name: 'set'
@@ -95,7 +95,7 @@ repl_lib.add_command
     v = if v is 'false' then false else v
     v = if v is 'true'  then true  else v
 
-    env_lib.get_env()[k] = v
+    env_lib.get_stacker_env()[k] = v
 
 ################################################################################
 # REPL TELL
@@ -228,4 +228,3 @@ repl_lib.add_command
   usage: 'run [TASKS]'
   fn: (tasks...) ->
     task_lib.run_tasks tasks
-

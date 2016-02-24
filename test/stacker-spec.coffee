@@ -1,16 +1,12 @@
-assert = require 'assert'
-
-mexpect = require '../lib/mexpect'
-
 require 'colors'
-
+assert = require 'assert'
+mexpect = require '../lib/mexpect'
 { pipe_with_prefix } = require '../util/util'
 
 class Stacker
 
   constructor: (cmd = '') ->
-    @mproc = mexpect.spawn
-      cmd: "stacker #{cmd}"
+    @mproc = mexpect.spawn cmd: "stacker #{cmd}"
 
   wait_for: (expectation) ->
     @mproc.on_data expectation
@@ -49,7 +45,6 @@ describe 'Stacker', ->
       /Started Test!/
       /Started all tasks!/
     ]
-
 
   describe 'repl commands', ->
     it 'help', ->

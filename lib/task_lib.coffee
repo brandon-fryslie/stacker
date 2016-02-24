@@ -15,7 +15,7 @@ util = require '../util/util'
 #
 ################################################################################
 run_tasks = (tasks, initial_env) ->
-  initial_env ?= env_lib.get_env()
+  initial_env ?= env_lib.get_stacker_env()
 
   final = tasks.reduce (previous, task) ->
     previous.then((env) ->
@@ -59,7 +59,7 @@ start_task = (task_name) ->
       util.log_error "Task does not exist: #{task_name}"
       return Promise.resolve()
 
-    task_config = task_config_lib.get_task_config task_name, env_lib.get_env()
+    task_config = task_config_lib.get_task_config task_name, env_lib.get_stacker_env()
 
     if task_config.check?
       if !task_config.check()
@@ -87,7 +87,7 @@ start_task = (task_name) ->
       start_foreground_task task_name, task_config, callback
 
     promise.then (new_env) ->
-      env_lib.set_env new_env
+      env_lib.set_stacker_env new_env
       resolve new_env
     .catch (err) ->
       console.log 'starttask inner fail', err, err.stack
@@ -113,7 +113,7 @@ start_foreground_task = (task_name, task_config, callback) ->
   mproc.on_data(task_config.wait_for).then (data) ->
     data = task_config.wait_for.exec?(data) ? [data]
     try
-      new_env = callback data, env_lib.get_env()
+      new_env = callback data, env_lib.get_stacker_env()
 
       if task_config.start_message
         repl_lib.print "start message: #{task_config.start_message}"
@@ -122,7 +122,7 @@ start_foreground_task = (task_name, task_config, callback) ->
       return new_env
     catch e
       repl_lib.print "Failed to start #{task_config.name}!".bold
-      return env_lib.get_env()
+      return env_lib.get_stacker_env()
 
 # Run a command
 # if id is passed in, will prefix output with that
@@ -196,7 +196,7 @@ start_daemon_task = (task_name, task_config, callback) ->
       unless code is 0
         throw "Daemon start task exited with code #{code}"
 
-      new_env = callback(data, env_lib.get_env()) # throws
+      new_env = callback(data, env_lib.get_stacker_env()) # throws
 
       if task_config.start_message
         repl_lib.print "start message: #{task_config.start_message}"
@@ -208,7 +208,6 @@ start_daemon_task = (task_name, task_config, callback) ->
       new_env
     .catch (err) ->
       util.log_error err
-      # console.log err
       repl_lib.print "Failed to start #{task_config.name}!".red.bold
       # repl_lib.print err.stack if err.stack?
 
