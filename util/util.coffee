@@ -3,13 +3,17 @@ require 'colors'
 stream = require 'stream'
 os = require 'os'
 
+move_cursor_to_beginning_of_line = ->
+  process.stdout.write '\x1b[G'
+
 # print something with a prefix
 prefix_print = (prefix, str...) ->
   str.splice 0, 0, prefix
 
   str = for s in str
-    "#{s}".split('\n').join("\r#{prefix} ")
+    "#{s}".split('\n').join("#{prefix} ")
 
+  move_cursor_to_beginning_of_line()
   console.log.apply @, str
 
 # exposed function for printing messages from stacker itself
