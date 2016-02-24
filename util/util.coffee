@@ -14,7 +14,7 @@ prefix_print = (prefix, str...) ->
 
 # exposed function for printing messages from stacker itself
 repl_print = (str...) ->
-  str.unshift 'stacker:'.bgWhite.black
+  str.unshift '\rstacker:'.bgWhite.black
   prefix_print.apply @, str
 
 # kills the whole shebang.  probably don't use this
