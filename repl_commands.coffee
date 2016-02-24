@@ -4,6 +4,11 @@ repl_lib = require './lib/repl_lib'
 task_lib = require './lib/task_lib'
 env_lib = require './lib/env_lib'
 task_config_lib = require './lib/task_config_lib'
+util = require './util/util'
+
+invalid_command_invocation = (cmd) ->
+  util.log_error "usage: #{cmd.usage}"
+  Promise.resolve()
 
 ################################################################################
 #  Process Status
@@ -85,13 +90,13 @@ repl_lib.add_command
   alias: 's'
   help: 'set environment variable'
   usage: 'set [KEY] [VALUE]'
-  fn: (k='', v='') ->
-    unless k.length > 0 and v.length > 0
-      repl_lib.print @help.split('\n')[0]
-      return
+  fn: (k, v) ->
+    unless k? and v?
+      return invalid_command_invocation @
 
     repl_lib.print 'setting'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
 
+    # gotta love boolean coersion in js
     v = if v is 'false' then false else v
     v = if v is 'true'  then true  else v
 
@@ -137,11 +142,17 @@ repl_lib.add_command
   help: 'tell someone to do something (e.g. tell alm grunt clean build)'
   usage: 'tell [TASK] [COMMAND]'
   fn: (target, cmd...) ->
+    unless target? and cmd.length
+      return invalid_command_invocation @
+
     targets = target.split ','
     _.map targets, (target) -> tell_target target, cmd
 
 # (string, [string]) -> null
 cleanup_task = (target) ->
+  unless target?
+    return invalid_command_invocation @
+
   task_name = task_config_lib.resolve_task_name target
 
   unless task_config_lib.task_exists task_name
@@ -165,6 +176,9 @@ repl_lib.add_command
 
 # (string, [string]) -> null
 is_daemon_running = (target) ->
+  unless target?
+    return invalid_command_invocation @
+
   task_name = task_config_lib.resolve_task_name target
 
   unless task_config_lib.task_exists task_name
@@ -202,7 +216,11 @@ repl_lib.add_command
   alias: 'k'
   help:'kill a task'
   usage:'kill [TASK]'
-  fn: task_lib.kill_task
+  fn: (target) ->
+    unless target?
+      return invalid_command_invocation @
+
+    task_lib.kill_task target
 
 repl_lib.add_command
   name: 'killall'
@@ -215,11 +233,13 @@ repl_lib.add_command
   alias: 'rs'
   help: 'restart a task'
   usage: 'restart [TASK]'
-  fn: (task) ->
-    repl_lib.print "Restarting #{task}..."
-    task_lib.kill_task(task).then ->
-      task_lib.start_task(task)
+  fn: (target) ->
+    unless target?
+      return invalid_command_invocation @
 
+    repl_lib.print "Restarting #{target}..."
+    task_lib.kill_task(target).then ->
+      task_lib.start_task(target)
 
 repl_lib.add_command
   name: 'run'
@@ -227,4 +247,7 @@ repl_lib.add_command
   help: 'start multiple tasks'
   usage: 'run [TASKS]'
   fn: (tasks...) ->
+    unless tasks.length
+      return invalid_command_invocation @
+      
     task_lib.run_tasks tasks

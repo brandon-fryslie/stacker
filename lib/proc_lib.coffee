@@ -2,7 +2,6 @@ PROCS = {}
 DAEMONS = {}
 
 module.exports =
-
   add_proc: (id, proc) -> PROCS[id] = proc
 
   remove_proc: (id) -> delete PROCS[id]
