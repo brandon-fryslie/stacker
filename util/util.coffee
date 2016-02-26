@@ -11,7 +11,7 @@ prefix_print = (prefix, str...) ->
   str.splice 0, 0, prefix
 
   str = for s in str
-    "#{s}".split('\n').join("#{prefix} ")
+    "#{s}".split('\n').join("\n#{prefix} ")
 
   move_cursor_to_beginning_of_line()
   console.log.apply @, str
