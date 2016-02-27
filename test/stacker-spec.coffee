@@ -80,39 +80,53 @@ describe 'Stacker', ->
               stacker.send_cmd 'ps'
               stacker.wait_for(/No running procs!/)
 
-    describe 'daemons', ->
-
-      it 'starts a daemon', ->
-        stacker = new Stacker 'test-daemon'
+    it 'setenv', ->
+      stacker = new Stacker
+      stacker.send_cmd 'setenv SOME_ENV_VARIABLE SOME_VALUE'
+      stacker.send_cmd 'env'
+      stacker.wait_for([
+        /shell_env=/
+        /  SOME_ENV_VARIABLE=SOME_VALUE/
+      ]).then ->
+        stacker.send_cmd 'run test'
         stacker.wait_for [
-          /start-test-daemon: Started all the test infrastructures!!/
-          /Started Test Daemon!/
+          /Starting test/
+          /\$> SOME_ENV_VARIABLE=SOME_VALUE/
         ]
 
-      it 'stops a daemon', ->
-        stacker = new Stacker 'always-on-daemon'
-        stacker.send_cmd 'kill always-on-daemon'
-        stacker.wait_for(/stacker: Stopped daemon always-on-daemon successfully!/)
+  describe 'daemons', ->
 
-      it 'checks if a daemon is running', ->
-        stacker = new Stacker
-        stacker.send_cmd 'r? always-on-daemon'
-        stacker.wait_for [
-          /Checking to see if always-on-daemon is running.../
-          /always-on-daemon is running/
-        ]
+    it 'starts a daemon', ->
+      stacker = new Stacker 'test-daemon'
+      stacker.wait_for [
+        /start-test-daemon: Started all the test infrastructures!!/
+        /Started Test Daemon!/
+      ]
 
-      it 'does not start a daemon if it is already running', ->
-        stacker = new Stacker
-        stacker.send_cmd 'run always-on-daemon'
-        stacker.wait_for [
-          /Checking to see if always-on-daemon is already running.../
-          /Found running always-on-daemon!/
-        ]
+    it 'stops a daemon', ->
+      stacker = new Stacker 'always-on-daemon'
+      stacker.send_cmd 'kill always-on-daemon'
+      stacker.wait_for(/stacker: Stopped daemon always-on-daemon successfully!/)
 
-      it 'throws error if daemon start process fails to produce expected output before exiting', ->
-        stacker = new Stacker 'fail-daemon'
-        stacker.wait_for [
-          /Error: Failed to see expected output when starting fail-daemon/
-          /Failed to start Fail Daemon!/
-        ]
+    it 'checks if a daemon is running', ->
+      stacker = new Stacker
+      stacker.send_cmd 'r? always-on-daemon'
+      stacker.wait_for [
+        /Checking to see if always-on-daemon is running.../
+        /always-on-daemon is running/
+      ]
+
+    it 'does not start a daemon if it is already running', ->
+      stacker = new Stacker
+      stacker.send_cmd 'run always-on-daemon'
+      stacker.wait_for [
+        /Checking to see if always-on-daemon is already running.../
+        /Found running always-on-daemon!/
+      ]
+
+    it 'throws error if daemon start process fails to produce expected output before exiting', ->
+      stacker = new Stacker 'fail-daemon'
+      stacker.wait_for [
+        /Error: Failed to see expected output when starting fail-daemon/
+        /Failed to start Fail Daemon!/
+      ]

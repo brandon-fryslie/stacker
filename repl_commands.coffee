@@ -80,10 +80,10 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'env'
   alias: 'e'
-  help: 'print information about your environment'
+  help: 'print information about the stacker environment'
   fn: ->
-    repl_lib.print 'ENV'.cyan.bold
-    repl_lib.print ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of env_lib.get_stacker_env()).join('\n')
+    repl_lib.print 'STACKER ENV'.cyan.bold
+    repl_lib.print util.beautify_obj(env_lib.get_stacker_env())
 
 repl_lib.add_command
   name: 'set'
@@ -249,5 +249,19 @@ repl_lib.add_command
   fn: (tasks...) ->
     unless tasks.length
       return invalid_command_invocation @
-      
+
     task_lib.run_tasks tasks
+
+repl_lib.add_command
+  name: 'setenv'
+  help: 'set a shell environment variable'
+  usage: 'setenv [KEY] [VALUE]'
+  fn: (k, v) ->
+    unless k? and v?
+      return invalid_command_invocation @
+
+    repl_lib.print 'setting shell environment variable'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
+
+    env = env_lib.get_stacker_env()
+    env.shell_env ?= {}
+    env.shell_env[k] = v

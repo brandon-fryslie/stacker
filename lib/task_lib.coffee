@@ -128,14 +128,14 @@ start_foreground_task = (task_name, task_config, callback) ->
 # if id is passed in, will prefix output with that
 # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
 run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
-  additional_env = env ? {}
+  shell_env = _.assign {}, env_lib.get_stacker_env().shell_env, env
 
   cwd ?= process.cwd()
   silent ?= false
   pipe_output ?= true
   close_stdin ?= true
   direct ?= false
-  env = env_lib.get_shell_env additional_env
+  env = env_lib.get_shell_env shell_env
 
   mproc = mexpect.spawn
     id: id
@@ -169,7 +169,7 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
     mproc.proc.stdin.end()
 
   unless silent
-    repl_lib.print util.pretty_command_str cmd, additional_env
+    repl_lib.print util.pretty_command_str cmd, shell_env
 
   mproc
 
@@ -261,7 +261,7 @@ start_process = (id, task_config) ->
   mproc = run_cmd
     id: id
     cmd: task_config.command
-    env: task_config.additional_env
+    env: task_config.shell_env
     cwd: task_config.cwd
     verbose: false
     direct: true
@@ -292,7 +292,7 @@ kill_daemon_task = (task_name, task_config) ->
 
     run_cmd
       cmd: task_config.exit_command
-      env: task_config.additional_env
+      env: task_config.shell_env
       cwd: task_config.cwd
     .on_close.then ([code, signal]) ->
       if code is 0

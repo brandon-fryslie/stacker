@@ -34,7 +34,7 @@ task_config =
     command: ['lein', 'run']
     start_message: "on #{'127.0.0.1:3000'.magenta}"
     cwd: "#{rally.ROOTDIR}/zuul"
-    additional_env:
+    shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       ZUUL_TENANT_OVERRIDE: env.schema
     wait_for: /Server started!|(Connection timed out)|(Address already in use)|(All host pools marked down.)/
@@ -54,7 +54,7 @@ task_config =
     alias: 'bb'
     command: command
     cwd: "#{rally.ROOTDIR}/bag-boy"
-    additional_env:
+    shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
     wait_for: /\|-BAG BOY-\||(Connection timed out)/
     callback: (data, env) ->
@@ -73,7 +73,7 @@ task_config =
     alias: 'bs'
     command: command
     cwd: "#{rally.ROOTDIR}/birdseed"
-    additional_env:
+    shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       BIRDSEED_SCHEMAS: env.schema
     wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/
@@ -85,28 +85,28 @@ task_config =
 
   alm: (env) ->
     command = ['./gradlew', 'jettyRun']
-    additional_env =
+    shell_env =
       MESSAGE_QUEUE_TYPE: 'KAFKA'
       START_MARSHMALLOW: 'true'
 
     if env.zookeeper_address
-      additional_env['ZOOKEEPER_CONNECT'] = env.zookeeper_address
+      shell_env['ZOOKEEPER_CONNECT'] = env.zookeeper_address
 
     if env.with_local_appsdk
-      additional_env['APPSDK_PATH'] = "#{rally.ROOTDIR}/appsdk"
+      shell_env['APPSDK_PATH'] = "#{rally.ROOTDIR}/appsdk"
 
     if env.with_local_app_catalog
-      additional_env['APP_CATALOG_PATH'] = "#{rally.ROOTDIR}/app-catalog"
+      shell_env['APP_CATALOG_PATH'] = "#{rally.ROOTDIR}/app-catalog"
 
     if env.with_local_churro
-      additional_env['BURRO_URL'] = env.burro_address
+      shell_env['BURRO_URL'] = env.burro_address
 
     name: 'ALM'
     alias: 'a'
     command: command
     start_message: "on #{'127.0.0.1:7001'.magenta}"
     cwd: process.env.WEBAPP_HOME
-    additional_env: additional_env
+    shell_env: shell_env
     wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
     callback: (data, env) ->
       [match, timeout_error] = data
@@ -119,7 +119,7 @@ task_config =
     alias: 'do'
     command: ['lein', 'start-docker-oracle']
     cwd: "#{rally.ROOTDIR}/pigeon"
-    additional_env:
+    shell_env:
       DOCKER_HOST: "tcp://bld-docker-16:4243"
       DEV_MODE: true
 
@@ -133,7 +133,7 @@ task_config =
       mproc = run_cmd
         cmd: ["docker ps -a | grep #{container_name}"]
         cwd: @cwd
-        env: @additional_env
+        env: @shell_env
         pipe_output: false
 
       mproc.on_close.then ([code, signal]) ->
@@ -147,7 +147,7 @@ task_config =
       run_cmd
         cmd: ["docker ps -a | grep #{container_name} | awk '{print $1}' | xargs docker rm -f"]
         cwd: @cwd
-        env: @additional_env
+        env: @shell_env
         pipe_output: false
       .on_close
 
@@ -169,7 +169,7 @@ task_config =
     command: command
     start_message: "on #{'127.0.0.1:3200'.magenta}"
     cwd: "#{rally.ROOTDIR}/pigeon"
-    additional_env:
+    shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       STACK: env.schema
     wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
@@ -229,7 +229,7 @@ task_config =
     command: ['lein', 'run']
     start_message: "on #{'127.0.0.1:4000'.magenta}"
     cwd: "#{rally.ROOTDIR}/hydra"
-    additional_env:
+    shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
     wait_for: /hydra listening on port 4000|(RuntimeException)/
     callback: (data, env) ->
@@ -241,7 +241,7 @@ task_config =
   test: (env) ->
     name: 'Test'
     alias: 't'
-    additional_env:
+    shell_env:
       KAFKA_QUEUE_TYPE: 'NIGHTMARE'
     command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
     start_message: 'Testing a basic task...'

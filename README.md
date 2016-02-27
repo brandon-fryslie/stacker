@@ -80,7 +80,7 @@ name: 'Birdseed'
 alias: 'bs'
 command: command
 cwd: "#{rally.ROOTDIR}/birdseed"
-additional_env:
+shell_env:
   ZOOKEEPER_CONNECT: env.zookeeper_address
   BIRDSEED_SCHEMAS: env.schema
 wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/

@@ -9,8 +9,7 @@ set_stacker_env = (env = CURRENT_ENV) ->
   CURRENT_ENV = _.cloneDeep env
 
 get_shell_env = (obj) ->
-  env = _.assign {}, process.env, JAVA_HOME: process.env.JAVA8_HOME
-  _.assign {}, env, obj
+  _.assign {}, process.env, obj
 
 module.exports =
   get_shell_env: get_shell_env

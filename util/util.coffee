@@ -51,9 +51,17 @@ color_array = (array, color) ->
   for s in array
     if typeof s is 'string' and s[color] then s[color] else s
 
-pretty_command_str = (command, additional_env={}) ->
-  ['$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of additional_env).join(' '), "#{command.join(' ')}".green].join(' ')
+pretty_command_str = (command, shell_env={}) ->
+  ['$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of shell_env).join(' '), "#{command.join(' ')}".green].join(' ')
 
+beautify_obj = (obj, level = 0) ->
+  res = for k, v of obj
+    v = if _.isObject(v)
+      if _.isEmpty(v) then '' else '\n' + beautify_obj(v, level+1)
+    else
+      v
+    _.repeat(' ', level*2) + "#{k}".blue.bold + '='.gray + "#{v}".magenta
+  res.join '\n'
 
 ##########################################
 #  Pipe streams with a colored prefix
@@ -185,4 +193,5 @@ module.exports = {
   wait_for_keypress
   try_to_clone
   pretty_command_str
+  beautify_obj
 }
