@@ -44,45 +44,6 @@ task_config =
         util.error 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
       env
 
-  'bag-boy': (env) ->
-    command = if env['bag-boy-profile'].length is 0
-      ['lein', 'run']
-    else
-      ['lein', 'with-profile', env['bag-boy-profile'], 'run']
-
-    name: 'Bag Boy'
-    alias: 'bb'
-    command: command
-    cwd: "#{rally.ROOTDIR}/bag-boy"
-    shell_env:
-      ZOOKEEPER_CONNECT: env.zookeeper_address
-    wait_for: /\|-BAG BOY-\||(Connection timed out)/
-    callback: (data, env) ->
-      [match, timeout_error] = data
-      if timeout_error
-        util.error 'Error: Bagboy failed to connect to Marshmallow', data.input ? data
-      env
-
-  birdseed: (env) ->
-    command = if env['birdseed-profile'].length is 0
-      ['lein', 'run']
-    else
-      ['lein', 'with-profile', env['birdseed-profile'], 'run']
-
-    name: 'Birdseed'
-    alias: 'bs'
-    command: command
-    cwd: "#{rally.ROOTDIR}/birdseed"
-    shell_env:
-      ZOOKEEPER_CONNECT: env.zookeeper_address
-      BIRDSEED_SCHEMAS: env.schema
-    wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/
-    callback: (data, env) ->
-      [match, timeout_error] = data
-      if timeout_error
-        util.error 'Error: Birdseed failed to connect to Marshmallow', data.input ? data
-      env
-
   alm: (env) ->
     command = ['./gradlew', 'jettyRun']
     shell_env =
