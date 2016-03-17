@@ -42,6 +42,7 @@ task_config =
       [match, timeout_error, address_in_use_error, host_pool_down_error] = data
       if timeout_error || address_in_use_error || host_pool_down_error
         util.error 'Error: Zuul failed to connect to Marshmallow:', data.input ? data
+      env.with_local_zuul = true
       env
 
   alm: (env) ->
@@ -61,6 +62,12 @@ task_config =
 
     if env.with_local_churro
       shell_env['BURRO_URL'] = env.burro_address
+
+    if env.with_local_churro
+      shell_env['BURRO_URL'] = env.burro_address
+
+    if env.with_local_zuul
+      shell_env['ZUUL_HOSTNAME'] = 'http://localhost:3000'
 
     name: 'ALM'
     alias: 'a'
