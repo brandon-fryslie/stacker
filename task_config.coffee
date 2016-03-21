@@ -31,10 +31,11 @@ task_config =
   zuul: (env) ->
     name: 'Zuul'
     alias: 'z'
-    command: ['lein', 'run']
+    command: ['lein', 'with-profile', 'oracle', 'run']
     start_message: "on #{'127.0.0.1:3000'.magenta}"
     cwd: "#{rally.ROOTDIR}/zuul"
     shell_env:
+      DATASTORE_OVERRIDE: 'db'
       ZOOKEEPER_CONNECT: env.zookeeper_address
       ZUUL_TENANT_OVERRIDE: env.schema
     wait_for: /Server started!|(Connection timed out)|(Address already in use)|(All host pools marked down.)/
