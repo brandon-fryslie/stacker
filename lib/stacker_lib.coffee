@@ -29,7 +29,6 @@ stacker_exit = (repl) ->
 # Boots the stack
 ################################################################################
 boot_stack = (tasks, should_start_repl) ->
-  repl_lib.print 'VERBOSE MODE'.red if env_lib.get_stacker_env().verbose
   repl_lib.print 'IGNORE RUNNING DAEMONS: ON'.yellow if env_lib.get_stacker_env().ignore_running_daemons
 
   if should_start_repl

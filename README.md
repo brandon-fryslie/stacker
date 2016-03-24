@@ -7,23 +7,18 @@ stacker is a utility to run a bunch of processes at once
 
     Options
        --zk                       Zookeeper Address
-       --clean-alm                Clean ALM javas
-       --dbm                      Run ALM DB Migrations task when starting ALM
        --with-local-appsdk        Use local appsdk at ~/projects/appsdk
        --with-local-app-catalog   Use local app-catalog at ~/projects/app-catalog
        --with-local-churro        Use local churro at ~/projects/churro
-       -q, --quiet                Suppress output from processes
        --no-repl                  do not start repl
        --schema                   specify oracle schema name
-       --bag-boy-profile          specify a lein profile for bag-boy
-       --birdseed-profile         specify a lein profile for birdseed
        --pigeon-profile           specify a lein profile for pigeon
 
 ### common invocations
 
 start lots of things
 
-    stacker marshmallow zuul bag-boy birdseed alm pigeon --with-local-appsdk
+    stacker marshmallow zuul alm pigeon --with-local-appsdk
 
 use aliases
 

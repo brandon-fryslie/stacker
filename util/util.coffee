@@ -88,7 +88,7 @@ create_prefix_stream_transformer = (prefix) ->
     @_lastLineData = lines.pop()
 
     for line in lines
-      @push "#{prefix} #{line}\n"
+      @push "\r#{prefix} #{line}\n"
 
     done()
 

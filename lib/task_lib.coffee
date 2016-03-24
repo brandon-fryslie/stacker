@@ -6,6 +6,7 @@ proc_util = require '../util/proc_util'
 task_config_lib = require './task_config_lib'
 mexpect = require './mexpect'
 util = require '../util/util'
+fs = require 'fs'
 
 ################################################################################
 #  Run Tasks
@@ -92,8 +93,8 @@ start_task = (task_name) ->
     .catch (err) ->
       console.log 'starttask inner fail', err, err.stack
   .catch (err) ->
-    console.log 'starttask fail', err, err.stack
-
+    repl_lib.print err.message.red
+    # repl_lib.print err.stack
 
 ################################################################################
 ### Tasks
@@ -131,6 +132,14 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
   shell_env = _.assign {}, env_lib.get_stacker_env().shell_env, env
 
   cwd ?= process.cwd()
+
+  missing_dir_error = "This task has an invalid working directory (#{cwd}).  Please check your configuration."
+  try
+    unless fs.statSync(cwd).isDirectory()
+      throw new Error missing_dir_error
+  catch e
+    throw new Error missing_dir_error
+
   silent ?= false
   pipe_output ?= true
   close_stdin ?= true
@@ -226,10 +235,9 @@ start_daemon_task = (task_name, task_config, callback) ->
       repl_lib.print "Did not find running #{task_name.cyan}.  Starting..."
       _start_daemon_task()
 
-
-
   .catch (err) ->
-    repl_lib.print '%%%%%%%%%%%%%%%%%%%'.red, err.stack
+    repl_lib.print err.message.red
+    # repl_lib.print err.stack
 
 
 # (task_name, task_config) -> (Promise -> [data, code, signal])

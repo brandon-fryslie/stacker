@@ -10,9 +10,11 @@ path = require 'path'
 
 class Stacker
   constructor: (cmd = '', env = {}) ->
+    env.STACKER_CONFIG_DIR = "#{__dirname}/config"
     @mproc = mexpect.spawn
       cmd: "stacker #{cmd}"
       env: env
+    # @engageOutput()
 
   wait_for: (expectation) ->
     @mproc.on_data expectation
@@ -56,16 +58,7 @@ describe 'Stacker', ->
     ]
 
   it 'uses config file to set stacker env', ->
-    configDir = temp.mkdirSync('stacker-config')
-
-    configData = """
-    module.exports =
-      stacker_env:
-        testing_stacker_env: 'put a value here'
-    """
-
-    fs.writeFileSync("#{configDir}/config.coffee", configData)
-
+    configDir = "#{__dirname}/config"
     stacker = new Stacker '', STACKER_CONFIG_DIR: configDir
     stacker.wait_for ///#{"Using config dir: #{configDir}"}///
     .then ->
@@ -85,7 +78,7 @@ describe 'Stacker', ->
 
     it 'tell', ->
       stacker = new Stacker
-      stacker.send_cmd 'tell alm echo butt'
+      stacker.send_cmd 'tell test echo butt'
       # pipe_with_prefix '---- stacker output'.magenta, stacker.mproc.proc.stdout, process.stdout
       stacker.wait_for [
         /echo butt/
@@ -123,7 +116,6 @@ describe 'Stacker', ->
         ]
 
   describe 'daemons', ->
-
     it 'starts a daemon', ->
       stacker = new Stacker 'test-daemon'
       stacker.wait_for [
@@ -158,3 +150,7 @@ describe 'Stacker', ->
         /Error: Failed to see expected output when starting fail-daemon/
         /Failed to start Fail Daemon!/
       ]
+
+    it 'throws error if task has an invalid working directory', ->
+      stacker = new Stacker 'cwd-missing'
+      stacker.wait_for /This task has an invalid working directory \(\/bla\/bla\/bla\)\./

@@ -119,7 +119,7 @@ repl_lib.add_command
 tell_target = (target, cmd) ->
   try
     path = if task_config_lib.task_exists(target)
-      task_config_lib.read_task_property target, 'cwd'
+      task_config_lib.read_task_property(target, 'cwd') ? process.cwd()
     else if fs.statSync("#{process.env.HOME}/projects/#{target}")?.isDirectory()
       "#{process.env.HOME}/projects/#{target}"
   catch e

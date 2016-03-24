@@ -1,7 +1,7 @@
 require 'colors'
 nomnom = require 'nomnom'
 rally = require './rally'
-task_config = require './task_config'
+task_config = require('./task_config').get_task_config()
 
 opts = nomnom
 .printer((str) ->
@@ -10,16 +10,16 @@ opts = nomnom
   console.log options_str = str.split('\n')[4..].join('\n')
   process.exit 0
 )
-.option('zk'
+.option('no-repl'
+  help: 'do not start repl'
+  flag: true
+)
+.option('ignore-running-daemons'
+  help: 'skip all is_running checks on daemons'
+  flag: true
+)
+.option('zk' # need a way to print these options in the help output
   help: 'Zookeeper Address'
-)
-.option('clean-alm'
-  help: 'Clean ALM javas'
-  flag: true
-)
-.option('dbm'
-  help: 'Run ALM DB Migrations task when starting ALM'
-  flag: true
 )
 .option('with-local-appsdk'
   help: 'Use local appsdk at ~/projects/appsdk'
@@ -33,27 +33,8 @@ opts = nomnom
   help: 'Use local churro at ~/projects/churro (starts burro too)'
   flag: true
 )
-.option('quiet'
-  help: 'Suppress output from processes'
-  abbr: 'q'
-  flag: true
-)
-.option('no-repl'
-  help: 'do not start repl'
-  flag: true
-)
-.option('ignore-running-daemons'
-  help: 'skip all is_running checks on daemons'
-  flag: true
-)
 .option('schema'
   help: 'specify oracle schema name'
-)
-.option('bag-boy-profile'
-  help: 'specify a lein profile for bag-boy'
-)
-.option('birdseed-profile'
-  help: 'specify a lein profile for birdseed'
 )
 .option('pigeon-profile'
   help: 'specify a lein profile for pigeon'

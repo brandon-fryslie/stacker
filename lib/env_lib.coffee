@@ -1,8 +1,8 @@
 _ = require 'lodash'
-config = require('./config_lib')()
+config = require('./config_lib').get_config()
 
 ################################################################################
-# Current REPL environment - keeps track of verbose/quiet, using appsdk/churro/whatever
+# Current REPL environment - keeps track of internal state
 ################################################################################
 CURRENT_ENV = {}
 
