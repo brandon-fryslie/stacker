@@ -2,17 +2,26 @@ require 'colors'
 assert = require 'assert'
 mexpect = require '../lib/mexpect'
 { pipe_with_prefix } = require '../util/util'
+_ = require 'lodash'
+
+fs = require 'fs'
+temp = require('temp')
+path = require 'path'
 
 class Stacker
-
-  constructor: (cmd = '') ->
-    @mproc = mexpect.spawn cmd: "stacker #{cmd}"
+  constructor: (cmd = '', env = {}) ->
+    @mproc = mexpect.spawn
+      cmd: "stacker #{cmd}"
+      env: env
 
   wait_for: (expectation) ->
     @mproc.on_data expectation
 
   send_cmd: (cmd) ->
     @mproc.proc.stdin.write "#{cmd}\n"
+
+  engageOutput: ->
+    pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stdout, process.stdout
 
 describe 'Stacker', ->
   it 'can start a foreground task', ->
@@ -45,6 +54,25 @@ describe 'Stacker', ->
       /Started Test!/
       /Started all tasks!/
     ]
+
+  it 'uses config file to set stacker env', ->
+    configDir = temp.mkdirSync('stacker-config')
+
+    configData = """
+    module.exports =
+      stacker_env:
+        testing_stacker_env: 'put a value here'
+    """
+
+    fs.writeFileSync("#{configDir}/config.coffee", configData)
+
+    stacker = new Stacker '', STACKER_CONFIG_DIR: configDir
+    stacker.wait_for ///#{"Using config dir: #{configDir}"}///
+    .then ->
+      stacker.send_cmd 'env'
+      stacker.wait_for [
+        /stacker: testing_stacker_env/
+      ]
 
   describe 'repl commands', ->
     it 'help', ->

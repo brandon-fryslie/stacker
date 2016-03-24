@@ -265,3 +265,4 @@ repl_lib.add_command
     env = env_lib.get_stacker_env()
     env.shell_env ?= {}
     env.shell_env[k] = v
+    env_lib.set_stacker_env env

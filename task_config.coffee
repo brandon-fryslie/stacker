@@ -11,7 +11,7 @@ task_config =
     name: 'Marshmallow'
     alias: 'm'
     command: ['lein', 'start-infrastructure']
-    cwd: "#{rally.ROOTDIR}/marshmallow"
+    cwd: "#{env.ROOTDIR}/marshmallow"
     wait_for:  /ZOOKEEPER INIT:\s*([\w:]+)|(Connection timed out)/
     callback: (data, env) ->
       [match, zookeeper_address, error] = data
@@ -33,7 +33,7 @@ task_config =
     alias: 'z'
     command: ['lein', 'with-profile', 'oracle', 'run']
     start_message: "on #{'127.0.0.1:3000'.magenta}"
-    cwd: "#{rally.ROOTDIR}/zuul"
+    cwd: "#{env.ROOTDIR}/zuul"
     shell_env:
       DATASTORE_OVERRIDE: 'db'
       ZOOKEEPER_CONNECT: env.zookeeper_address
@@ -56,10 +56,10 @@ task_config =
       shell_env['ZOOKEEPER_CONNECT'] = env.zookeeper_address
 
     if env.with_local_appsdk
-      shell_env['APPSDK_PATH'] = "#{rally.ROOTDIR}/appsdk"
+      shell_env['APPSDK_PATH'] = "#{env.ROOTDIR}/appsdk"
 
     if env.with_local_app_catalog
-      shell_env['APP_CATALOG_PATH'] = "#{rally.ROOTDIR}/app-catalog"
+      shell_env['APP_CATALOG_PATH'] = "#{env.ROOTDIR}/app-catalog"
 
     if env.with_local_churro
       shell_env['BURRO_URL'] = env.burro_address
@@ -87,7 +87,7 @@ task_config =
     name: 'Docker Oracle'
     alias: 'do'
     command: ['lein', 'start-docker-oracle']
-    cwd: "#{rally.ROOTDIR}/pigeon"
+    cwd: "#{env.ROOTDIR}/pigeon"
     shell_env:
       DEV_MODE: true
 
@@ -136,7 +136,7 @@ task_config =
     alias: 'p'
     command: command
     start_message: "on #{'127.0.0.1:3200'.magenta}"
-    cwd: "#{rally.ROOTDIR}/pigeon"
+    cwd: "#{env.ROOTDIR}/pigeon"
     shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
       STACK: env.schema
@@ -152,7 +152,7 @@ task_config =
     alias: 'mp'
     command: ['npm', 'start']
     start_message: "on #{'127.0.0.1:3200'.magenta}"
-    cwd: "#{rally.ROOTDIR}/mock-pigeon"
+    cwd: "#{env.ROOTDIR}/mock-pigeon"
     wait_for: /Electron ./
     callback: (data, env) ->
       [match, exception] = data
@@ -165,7 +165,7 @@ task_config =
     alias: 'b'
     command: ['npm', 'run', 'dev']
     start_message: "on #{'127.0.0.1:8855'.magenta} with local #{'churro'.cyan}."
-    cwd: "#{rally.ROOTDIR}/burro"
+    cwd: "#{env.ROOTDIR}/burro"
     wait_for: /Server running at: http:\/\/([\w.:]+)/
     callback: (data, env) ->
       [match, burro_address] = data
@@ -176,7 +176,7 @@ task_config =
     alias: 'rn'
     command: ['realtime-nginx']
     start_message: "on #{'rally.dev:8999'.magenta}."
-    cwd: "#{rally.ROOTDIR}/burro"
+    cwd: "#{env.ROOTDIR}/burro"
     wait_for: /Started/
     is_running: ->
       run_cmd
@@ -196,7 +196,7 @@ task_config =
     alias: 'h'
     command: ['lein', 'run']
     start_message: "on #{'127.0.0.1:4000'.magenta}"
-    cwd: "#{rally.ROOTDIR}/hydra"
+    cwd: "#{env.ROOTDIR}/hydra"
     shell_env:
       ZOOKEEPER_CONNECT: env.zookeeper_address
     wait_for: /hydra listening on port 4000|(RuntimeException)/
@@ -237,7 +237,7 @@ task_config =
   'test-on-close': (env) ->
     name: 'TestOnClose'
     command: ['./display-after-1-second.sh', 'Hi There!']
-    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'test close callback'
     wait_for: /The/
     onClose: (code, signal) ->
@@ -254,7 +254,7 @@ task_config =
       run_cmd
         cmd: ['echo', 'Cleaning up after test daemon...']
       .on_close
-    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'test daemon procs'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']
@@ -270,7 +270,7 @@ task_config =
       run_cmd
         cmd: ['echo', 'Cleaning up after test daemon...']
       .on_close
-    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'daemon is always running'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']
@@ -282,15 +282,15 @@ task_config =
     wait_for: /Neva gonna happen/
     exit_command: ['echo', 'Shutting all the shit down!']
     is_running: -> Promise.resolve false
-    cwd: "#{rally.ROOTDIR}/rally-stack/stacker/etc"
+    cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
     start_message: 'should never see this!'
 
   'test-clone': (env) ->
     name: 'Test Clone'
     alias: 'tc'
     command: ['echo', 'Started all the test infrastructures!!']
-    exit_command: ['rm', '-rf', "#{rally.ROOTDIR}/ops-dashboard"]
-    cwd: "#{rally.ROOTDIR}/ops-dashboard"
+    exit_command: ['rm', '-rf', "#{env.ROOTDIR}/ops-dashboard"]
+    cwd: "#{env.ROOTDIR}/ops-dashboard"
     start_message: 'test daemon procs'
     onClose: (code, signal) ->
       run_cmd cmd: ['echo', 'Exit command run!']

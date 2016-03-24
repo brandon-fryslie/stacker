@@ -12,8 +12,8 @@ register_task_config = (task_config) ->
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
-GET_OPTS_FOR_TASK = (task, env) ->
-  TASK_CONFIG[task](env)
+GET_OPTS_FOR_TASK = (task) ->
+  TASK_CONFIG[task](env_lib.get_stacker_env())
 
 # read a property from a task
 # (string, string) -> string
