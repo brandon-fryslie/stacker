@@ -1,0 +1,44 @@
+#!/usr/bin/env coffee
+
+require('es6-promise').polyfill()
+
+require 'colors'
+_ = require 'lodash'
+rally = require './rally'
+stacker = require './lib/stacker_lib'
+task_config = require './task_config'
+opts = require './cli_opts'
+util = require './util/util'
+
+require('climet-client')()
+
+# Initial env
+initial_env =
+  verbose: !opts.quiet
+  ignore_running_daemons: !!opts['ignore-running-daemons']
+
+  zookeeper_address: opts.zk || rally.BLD_ZOOKEEPER_ADDRESS
+  with_local_appsdk: !!opts['with-local-appsdk']
+  with_local_app_catalog: !!opts['with-local-app-catalog']
+  with_local_churro: !!opts['with-local-churro']
+  schema: opts.schema || rally.get_schema_name()
+  burro_address: rally.DEFAULT_BURRO_ADDRESS
+  'bag-boy-profile': opts['bag-boy-profile'] || ''
+  'birdseed-profile': opts['birdseed-profile'] || ''
+  'pigeon-profile': opts['pigeon-profile'] || ''
+
+# array of strings
+tasks = rally.get_tasks_to_start(opts._, opts)
+
+# must call this first because the register task config depends on it
+stacker.initialize_env initial_env
+
+stacker.register_task_config task_config
+
+process.on 'uncaughtException', (error) ->
+  util.log_error 'unhandled exception!'
+  console.log error
+  console.log error.stack
+
+# DO IT!
+stacker.boot(tasks, !opts['no-repl'])
