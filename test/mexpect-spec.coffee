@@ -60,6 +60,13 @@ describe 'mexpect', ->
           resolve()
       , 50
 
+  it 'can take some env variables', ->
+    mproc = mexpect.spawn
+      cmd: 'env'
+      env: TEST_1_2: 'Ahoy!'
+
+    mproc.on_data /TEST_1_2=Ahoy!/
+
 module.exports = {
   spawn_and_match
   assert_exit_status

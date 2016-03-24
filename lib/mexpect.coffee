@@ -88,43 +88,32 @@ class Mexpect
 
       @stderr.pipe cb_stream
 
-
-  _spawn_bash: (cmd, cwd, env, opt) ->
-    @proc = child_process.spawn 'bash', [],
-      _.assign
-        cwd: cwd
-        env: env
-      ,
-        opt
-
+  _spawn_bash: (cmd, opt) ->
+    @proc = child_process.spawn 'bash', [], opt
     @proc.stdin.write "#{cmd.join(' ')}\n"
     @proc
 
-  _spawn_direct: (cmd, cwd, env, opt) ->
+  _spawn_direct: (cmd, opt) ->
     [cmd, argv...] = cmd
-    @proc = child_process.spawn cmd, argv,
-      _.assign
-        cwd: cwd
-        env: env
-      ,
-        opt
+    @proc = child_process.spawn cmd, argv, opt
 
   # cmd: command to run
   # cwd: working dir for command (default: current process cwd)
   # env: shell env (default: current process env)
   # direct: run command directly (not using bash)
   spawn: (opt) =>
-    {cmd, cwd, env, direct} = opt
+    {cmd, direct} = opt
+    opt =_.omit opt, ['cmd', 'direct']
 
     cmd = if _.isArray(cmd) then cmd else [cmd]
-    cwd ?= process.cwd()
-    env ?= process.env
     direct ?= false
+    opt.cwd ?= process.cwd()
+    opt.env = _.assign({}, process.env, opt.env)
 
     @proc = if direct
-      @_spawn_direct cmd, cwd, env, opt
+      @_spawn_direct cmd, opt
     else
-      @_spawn_bash cmd, cwd, env, opt
+      @_spawn_bash cmd, opt
 
     @stdout = @proc.stdout.pipe create_newline_transform_stream()
     @stderr = @proc.stderr.pipe create_newline_transform_stream()
