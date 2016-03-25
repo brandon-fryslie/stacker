@@ -1,4 +1,8 @@
 module.exports =
-  stacker_env:
-    ROOTDIR: "#{process.env.HOME}/projects"
-    testing_stacker_env: 'put a value here'
+  args:
+    ROOTDIR:
+      describe: 'root directory at which to find projects'
+      default: "#{process.env.HOME}/projects"
+    'config-argument':
+      describe: 'good config arg'
+      default: 'wonderful argument'

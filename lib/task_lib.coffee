@@ -52,7 +52,7 @@ start_task = (task_name) ->
 
     task_name = task_config_lib.resolve_task_name task_name
 
-    if _(proc_lib.all_procs()).keys().contains(task_name) or _(proc_lib.all_daemons()).keys().contains(task_name)
+    if _(proc_lib.all_procs()).keys().includes(task_name) or _(proc_lib.all_daemons()).keys().includes(task_name)
       util.repl_print task_name.cyan + ' is already running!'.yellow
       return Promise.resolve()
 
@@ -90,11 +90,11 @@ start_task = (task_name) ->
     promise.then (new_env) ->
       env_lib.set_stacker_env new_env
       resolve new_env
-    .catch (err) ->
+    .catch (e) ->
       console.log 'starttask inner fail', err, err.stack
-  .catch (err) ->
-    repl_lib.print err.message.red
-    # repl_lib.print err.stack
+  .catch (e) ->
+    repl_lib.print e.message.red
+    util._log e.stack
 
 ################################################################################
 ### Tasks
@@ -285,7 +285,7 @@ start_process = (id, task_config) ->
 kill_tree = (pid, signal='SIGKILL') ->
   psTree = require('ps-tree')
   psTree pid, (err, children) ->
-    [pid].concat(_.pluck(children, 'PID')).forEach (pid) ->
+    [pid].concat(_.map(children, 'PID')).forEach (pid) ->
       try
         process.kill(pid, signal)
       catch e

@@ -47,7 +47,7 @@ describe 'Stacker', ->
     stacker = new Stacker 'test'
     stacker.wait_for(/Started all tasks!/).then ->
       stacker.send_cmd 'kill test'
-      stacker.wait_for(/test exited with signal SIGKILL/)
+      stacker.wait_for /test exited with signal SIGKILL/
 
   it 'passes additional shell env variables', ->
     stacker = new Stacker 'test'
@@ -57,15 +57,16 @@ describe 'Stacker', ->
       /Started all tasks!/
     ]
 
-  it 'uses config file to set stacker env', ->
-    configDir = "#{__dirname}/config"
-    stacker = new Stacker '', STACKER_CONFIG_DIR: configDir
-    stacker.wait_for ///#{"Using config dir: #{configDir}"}///
-    .then ->
+  describe 'arguments', ->
+    it 'handles arguments from config file', ->
+      stacker = new Stacker 'test'
       stacker.send_cmd 'env'
-      stacker.wait_for [
-        /stacker: testing_stacker_env/
-      ]
+      stacker.wait_for /config-argument=wonderful argument/
+
+    it 'handles arguments from tasks', ->
+      stacker = new Stacker 'test'
+      stacker.send_cmd 'env'
+      stacker.wait_for /task-argument=such a good default/
 
   describe 'repl commands', ->
     it 'help', ->

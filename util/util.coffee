@@ -3,6 +3,8 @@ require 'colors'
 stream = require 'stream'
 os = require 'os'
 
+DEBUG = false
+
 move_cursor_to_beginning_of_line = ->
   process.stdout.write '\x1b[G'
 
@@ -21,13 +23,6 @@ repl_print = (str...) ->
   str.unshift '\rstacker:'.bgWhite.black
   prefix_print.apply @, str
 
-# kills the whole shebang.  probably don't use this
-die = (msg...) ->
-  msg = color_array msg, 'red'
-  repl_print 'YOU DED'.red
-  repl_print.apply @, msg
-  process.exit 1
-
 # throw exception and print error
 error = (msg...) ->
   log_error.apply @, msg
@@ -37,6 +32,16 @@ error = (msg...) ->
 log_error = (msg...) ->
   msg = color_array msg, 'red'
   repl_print.apply @, msg
+
+# only print error
+log_error = (msg...) ->
+  msg = color_array msg, 'red'
+  repl_print.apply @, msg
+
+# debug logging
+_log = (args...) ->
+  if DEBUG
+    console.log.apply console, args
 
 log_proc_error = (err) ->
   msg = switch err.code
@@ -177,7 +182,9 @@ source $ZSH/oh-my-zsh.sh
 export TERM=xterm-256color"""
 
 module.exports = {
-  die
+  get_debug: -> DEBUG
+  set_debug: (val = true) -> DEBUG = val
+  _log
   error
   log_error
   log_proc_error

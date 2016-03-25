@@ -11,10 +11,10 @@
   "private": true,
   "dependencies": {
     "colors": "^1.0.3",
-    "es6-promise": "^3.0.2",
-    "lodash": "^3.2.0",
-    "nexpect": "^0.5.0",
-    "nomnom": "^1.8.1",
-    "q": "^1.1.2"
+    "es6-promise": "^3.1.2",
+    "lodash": "^4.6.1"
+  },
+  "yargs": {
+    "camel-case-expansion": false
   }
 }

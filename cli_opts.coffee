@@ -2,46 +2,74 @@ require 'colors'
 nomnom = require 'nomnom'
 rally = require './rally'
 task_config = require('./task_config').get_task_config()
+_  = require 'lodash'
+config = require './lib/config_lib'
+util = require './util/util'
 
-opts = nomnom
-.printer((str) ->
-  console.log "\nUsage: stacker #{ "[#{Object.keys(task_config).join('] [')}] ".cyan} #{'[options]'.bold.green}\n"
-  console.log 'Options'.bold.green
-  console.log options_str = str.split('\n')[4..].join('\n')
+stacker = 'stacker'.magenta
+
+set_yarg_opt = (opt) ->
+  for key, value of opt
+    yarg.option key, value
+
+task_cli_options = _.compact(
+  for name, configfn of task_config
+    configfn({}).args
+)
+
+config_cli_options =
+  config.get_config().args ? {}
+
+stacker_cli_options =
+  'debug':
+    describe: 'turn on debug mode'
+    default: false
+  'no-repl':
+    describe: 'do not start repl'
+    default: false
+  'ignore-running-daemons':
+    describe: 'skip all is_running checks on daemons'
+    default: false
+
+yarg = require('yargs')
+  .usage "#{'Usage:'.yellow} #{stacker} #{ "#{Object.keys(task_config).join(' ')} ".cyan}#{'[options]'.green }"
+  .example "#{stacker} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
+  .updateStrings
+    'Options:': 'Options:'.green
+  .option 'help',
+    alias: 'h'
+    describe: 'show help message'
+
+
+task_cli_options.map set_yarg_opt
+set_yarg_opt config_cli_options
+set_yarg_opt stacker_cli_options
+
+baked_yarg = yarg
+  .epilog '☃'.bold
+  .wrap null
+
+{argv} = baked_yarg
+
+if argv.help
+  baked_yarg.showHelp 'log'
   process.exit 0
-)
-.option('no-repl'
-  help: 'do not start repl'
-  flag: true
-)
-.option('ignore-running-daemons'
-  help: 'skip all is_running checks on daemons'
-  flag: true
-)
-.option('zk' # need a way to print these options in the help output
-  help: 'Zookeeper Address'
-)
-.option('with-local-appsdk'
-  help: 'Use local appsdk at ~/projects/appsdk'
-  flag: true
-)
-.option('with-local-app-catalog'
-  help: 'Use local app-catalog at ~/projects/app-catalog'
-  flag: true
-)
-.option('with-local-churro'
-  help: 'Use local churro at ~/projects/churro (starts burro too)'
-  flag: true
-)
-.option('schema'
-  help: 'specify oracle schema name'
-)
-.option('pigeon-profile'
-  help: 'specify a lein profile for pigeon'
-)
-.parse()
 
-# nomnom is fucking stupid
-opts['no-repl'] = opts.repl is false
+if argv.debug
+  util.set_debug()
 
-module.exports = opts
+# Set 'undefined' args to null so they are preserved in the stacker state
+nullify_args = (argv, opt) ->
+  for k, v of opt
+    argv[k] = null if _.isUndefined(argv[k])
+
+nullify_args(argv, opt) for opt in task_cli_options
+nullify_args argv, config_cli_options
+nullify_args argv, stacker_cli_options
+
+argv.stacker_env = _.omit argv, ['_', '$0', 'h', 'help']
+
+# TODO: use task_cli_options to group the command line args
+util._log argv
+
+module.exports = argv

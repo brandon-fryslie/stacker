@@ -28,6 +28,13 @@ module.exports = (env) ->
   start_message: "on #{'127.0.0.1:7001'.magenta}"
   cwd: process.env.WEBAPP_HOME
   shell_env: shell_env
+  args:
+    'with-local-appsdk':
+      describe: 'Use local appsdk at ~/projects/appsdk'
+    'with-local-app-catalog':
+      describe: 'Use local app-catalog at ~/projects/app-catalog'
+    'with-local-churro':
+      describe: 'Use local churro at ~/projects/churro'
   wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
   callback: (data, env) ->
     [match, timeout_error] = data

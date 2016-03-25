@@ -1,5 +1,5 @@
 module.exports = (env) ->
-  command = if env['pigeon-profile'].length is 0
+  command = if env['pigeon-profile']?.length is 0
     ['lein', 'run']
   else
     ['lein', 'with-profile', env['pigeon-profile'], 'run']
@@ -12,6 +12,10 @@ module.exports = (env) ->
   shell_env:
     ZOOKEEPER_CONNECT: env.zookeeper_address
     STACK: env.schema
+  args:
+    'pigeon-profile':
+      describe: 'pass a lein profile to pigeon'
+
   wait_for: /Ready to deliver your messages to Winterfell, sir!|(RuntimeException)/
   callback: (data, env) ->
     [match, exception] = data
