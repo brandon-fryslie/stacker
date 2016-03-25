@@ -3,12 +3,12 @@
 require 'colors'
 _ = require 'lodash'
 fs = require 'fs'
-repl_lib = require './repl_lib'
-require '../repl_commands'
-env_lib = require './env_lib'
-task_config_lib = require './task_config_lib'
-task_lib = require './task_lib'
-config = require './config_lib'
+repl_lib = require './repl'
+require './repl_commands'
+env_lib = require './env'
+task_config_lib = require './task_config'
+task_lib = require './task'
+config = require './config'
 util = require '../util/util'
 
 ################################################################################

@@ -6,7 +6,7 @@ require 'colors'
 _ = require 'lodash'
 rally = require './rally'
 stacker = require './lib/stacker_lib'
-opts = require './lib/cli_lib'
+opts = require './lib/args'
 util = require './util/util'
 
 require('climet-client')()

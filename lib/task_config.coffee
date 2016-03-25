@@ -1,8 +1,8 @@
 fs = require 'fs'
-env_lib = require './env_lib'
+env_lib = require './env'
 _ = require 'lodash'
 util = require '../util/util'
-config = require './config_lib'
+config = require './config'
 
 ################################################################################
 # Configuration of task configs and aliass

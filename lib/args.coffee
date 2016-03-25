@@ -1,7 +1,7 @@
 require 'colors'
 _  = require 'lodash'
-task_config = require('./task_config_lib').get_task_configs()
-config = require './config_lib'
+task_config = require('./task_config').get_task_configs()
+config = require './config'
 util = require '../util/util'
 
 stacker = 'stacker'.magenta

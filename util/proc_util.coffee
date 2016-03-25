@@ -1,4 +1,4 @@
-repl_lib = require '../lib/repl_lib'
+util = require './util'
 
 print_process_status = (name, exit_code, signal) ->
   status = switch
@@ -6,7 +6,7 @@ print_process_status = (name, exit_code, signal) ->
     when exit_code? then "exited with code #{exit_code}"
     when signal? then "exited with signal #{signal}"
     else 'no exit code and no signal - should investigate'
-  repl_lib.print name.cyan, status
+  util.repl_print name.cyan, status
 
 module.exports = {
   print_process_status

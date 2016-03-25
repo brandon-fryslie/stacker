@@ -1,9 +1,9 @@
 _ = require 'lodash'
-proc_lib = require './lib/proc_lib'
-repl_lib = require './lib/repl_lib'
-task_lib = require './lib/task_lib'
-env_lib = require './lib/env_lib'
-task_config_lib = require './lib/task_config_lib'
+proc_lib = require './lib/proc'
+repl_lib = require './lib/repl'
+task_lib = require './lib/task'
+env_lib = require './lib/env'
+task_config_lib = require './lib/task_config'
 util = require './util/util'
 
 invalid_command_invocation = (cmd) ->

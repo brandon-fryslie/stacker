@@ -1,7 +1,7 @@
 _ = require 'lodash'
 fs = require 'fs'
 require 'colors'
-repl_lib = require './lib/repl_lib'
+repl_lib = require './lib/repl'
 util = require './util/util'
 
 # Start these tasks
