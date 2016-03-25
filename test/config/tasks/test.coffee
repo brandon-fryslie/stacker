@@ -1,4 +1,4 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'Test'
   alias: 't'
   shell_env:
@@ -10,6 +10,6 @@ module.exports = (env) ->
       default: 'such a good default'
   start_message: 'Testing a basic task...'
   wait_for: /(stacker)/
-  callback: (data, env) ->
-    env.test_data = 'just some passed thru test data'
-    env
+  callback: (state, data) ->
+    state.test_data = 'just some passed thru test data'
+    state

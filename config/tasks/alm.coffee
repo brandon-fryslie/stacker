@@ -1,25 +1,25 @@
-module.exports = (env) ->
+module.exports = (state) ->
   command = ['./gradlew', 'jettyRun']
   shell_env =
     MESSAGE_QUEUE_TYPE: 'KAFKA'
     START_MARSHMALLOW: 'true'
 
-  if env.zookeeper_address
-    shell_env['ZOOKEEPER_CONNECT'] = env.zookeeper_address
+  if state.zookeeper_address
+    shell_env['ZOOKEEPER_CONNECT'] = state.zookeeper_address
 
-  if env.with_local_appsdk
-    shell_env['APPSDK_PATH'] = "#{env.ROOTDIR}/appsdk"
+  if state.with_local_appsdk
+    shell_env['APPSDK_PATH'] = "#{state.ROOTDIR}/appsdk"
 
-  if env.with_local_app_catalog
-    shell_env['APP_CATALOG_PATH'] = "#{env.ROOTDIR}/app-catalog"
+  if state.with_local_app_catalog
+    shell_env['APP_CATALOG_PATH'] = "#{state.ROOTDIR}/app-catalog"
 
-  if env.with_local_churro
-    shell_env['BURRO_URL'] = env.burro_address
+  if state.with_local_churro
+    shell_env['BURRO_URL'] = state.burro_address
 
-  if env.with_local_churro
-    shell_env['BURRO_URL'] = env.burro_address
+  if state.with_local_churro
+    shell_env['BURRO_URL'] = state.burro_address
 
-  if env.with_local_zuul
+  if state.with_local_zuul
     shell_env['ZUUL_HOSTNAME'] = 'http://localhost:3000'
 
   name: 'ALM'
@@ -36,8 +36,8 @@ module.exports = (env) ->
     'with-local-churro':
       describe: 'Use local churro at ~/projects/churro'
   wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
-  callback: (data, env) ->
+  callback: (state, data) ->
     [match, timeout_error] = data
     if timeout_error
       util.error 'Error: ALM failed to connect to Marshmallow', data.input ? data
-    env
+    state

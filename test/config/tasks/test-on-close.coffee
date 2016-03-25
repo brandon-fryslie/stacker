@@ -1,7 +1,7 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'TestOnClose'
   command: ['./display-after-1-second.sh', 'Hi There!']
-  cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
+  cwd: "#{state.ROOTDIR}/rally-stack/stacker/etc"
   start_message: 'test close callback'
   wait_for: /The/
   onClose: (code, signal) ->

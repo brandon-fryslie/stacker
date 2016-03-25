@@ -2,7 +2,7 @@ _ = require 'lodash'
 proc_lib = require './proc'
 repl_lib = require './repl'
 task_lib = require './task'
-env_lib = require './env'
+state_lib = require './state'
 task_config_lib = require './task_config'
 util = require './util'
 
@@ -78,12 +78,12 @@ repl_lib.add_command
     repl_lib.print strs.join '\n'
 
 repl_lib.add_command
-  name: 'env'
-  alias: 'e'
-  help: 'print information about the stacker environment'
+  name: 'state'
+  alias: 'env'
+  help: 'print information about the stacker state'
   fn: ->
-    repl_lib.print 'STACKER ENV'.cyan.bold
-    repl_lib.print util.beautify_obj(env_lib.get_stacker_env())
+    repl_lib.print 'STACKER STATE'.cyan.bold
+    repl_lib.print util.beautify_obj(state_lib.get_stacker_state())
 
 repl_lib.add_command
   name: 'set'
@@ -100,7 +100,7 @@ repl_lib.add_command
     v = if v is 'false' then false else v
     v = if v is 'true'  then true  else v
 
-    env_lib.get_stacker_env()[k] = v
+    state_lib.get_stacker_state()[k] = v
 
 ################################################################################
 # REPL TELL
@@ -262,7 +262,7 @@ repl_lib.add_command
 
     repl_lib.print 'setting shell environment variable'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
 
-    env = env_lib.get_stacker_env()
-    env.shell_env ?= {}
-    env.shell_env[k] = v
-    env_lib.set_stacker_env env
+    state = state_lib.get_stacker_state()
+    state.shell_env ?= {}
+    state.shell_env[k] = v
+    state_lib.set_stacker_state state

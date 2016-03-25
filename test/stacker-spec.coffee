@@ -71,13 +71,17 @@ describe 'Stacker', ->
   describe 'arguments', ->
     it 'handles arguments from config file', ->
       stacker = new Stacker 'test'
-      stacker.send_cmd 'env'
-      stacker.wait_for /config-argument=wonderful argument/
+      stacker.wait_for /Started all tasks!/
+      .then ->
+        stacker.send_cmd 'env'
+        stacker.wait_for /config-argument=wonderful argument/
 
     it 'handles arguments from tasks', ->
       stacker = new Stacker 'test'
-      stacker.send_cmd 'env'
-      stacker.wait_for /task-argument=such a good default/
+      stacker.wait_for /Started all tasks!/
+      .then ->
+        stacker.send_cmd 'env'
+        stacker.wait_for /task-argument=such a good default/
 
   describe 'repl commands', ->
     it 'help', ->
@@ -116,7 +120,7 @@ describe 'Stacker', ->
     it 'setenv', ->
       stacker = new Stacker
       stacker.send_cmd 'setenv SOME_ENV_VARIABLE SOME_VALUE'
-      stacker.send_cmd 'env'
+      stacker.send_cmd 'state'
       stacker.wait_for([
         /shell_env=/
         /  SOME_ENV_VARIABLE=SOME_VALUE/

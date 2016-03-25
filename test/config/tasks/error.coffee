@@ -1,4 +1,4 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'Error'
   command: ['tail', '-f', 'non-existent-file.coffee']
   start_message: 'test error'

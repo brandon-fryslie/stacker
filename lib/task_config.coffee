@@ -1,5 +1,5 @@
 fs = require 'fs'
-env_lib = require './env'
+env_lib = require './state'
 _ = require 'lodash'
 util = require './util'
 config = require './config_lib'
@@ -28,13 +28,13 @@ task_util =
 register_task_config = ->
   task_config = require_task_config()
   for task_name, config of task_config
-    {alias} = config(env_lib.get_stacker_env(), task_util)
+    {alias} = config(env_lib.get_stacker_state(), task_util)
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
 get_task_config = (task) ->
   register_task_config() unless REGISTERED
-  TASK_CONFIG[task](env_lib.get_stacker_env(), task_util)
+  TASK_CONFIG[task](env_lib.get_stacker_state(), task_util)
 
 get_task_configs = ->
   register_task_config() unless REGISTERED

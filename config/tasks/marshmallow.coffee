@@ -1,20 +1,20 @@
-module.exports = (env, {_, print}) ->
+module.exports = (state, {_, print}) ->
   name: 'Marshmallow'
   alias: 'm'
   command: ['lein', 'start-infrastructure']
-  cwd: "#{env.ROOTDIR}/marshmallow"
+  cwd: "#{state.ROOTDIR}/marshmallow"
   wait_for:  /ZOOKEEPER INIT:\s*([\w:]+)|(Connection timed out)/
-  callback: (data, env) ->
+  callback: (state, data) ->
     [match, zookeeper_address, error] = data
     if error
       util.error 'Marshmallow connection timed out: ', data
-      return env
+      return state
 
     unless zookeeper_address
       util.error 'Error: could not find zookeeper address in: ', match
-      return env
+      return state
 
     print 'Zookeeper Address:', zookeeper_address.magenta
 
-    new_env = _.assign {}, env, zookeeper_address: zookeeper_address
-    new_env
+    new_state = _.assign {}, state, zookeeper_address: zookeeper_address
+    new_state

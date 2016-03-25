@@ -60,7 +60,7 @@ nullify_args(argv, opt) for opt in task_cli_options
 nullify_args argv, config_cli_options
 nullify_args argv, stacker_cli_options
 
-argv.stacker_env = _.omit argv, ['_', '$0', 'h', 'help']
+argv.stacker_state = _.omit argv, ['_', '$0', 'h', 'help']
 
 # TODO: use task_cli_options to group the command line args
 

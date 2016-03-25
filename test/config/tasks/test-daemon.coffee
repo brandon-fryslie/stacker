@@ -1,4 +1,4 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'Test Daemon'
   alias: 'td'
   command: ['echo', 'Started all the test infrastructures!!']
@@ -9,7 +9,7 @@ module.exports = (env) ->
     run_cmd
       cmd: ['echo', 'Cleaning up after test daemon...']
     .on_close
-  cwd: "#{env.ROOTDIR}/rally-stack/stacker/etc"
+  cwd: "#{state.ROOTDIR}/rally-stack/stacker/etc"
   start_message: 'test daemon procs'
   onClose: (code, signal) ->
     run_cmd cmd: ['echo', 'Exit command run!']

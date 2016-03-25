@@ -76,10 +76,10 @@ alias: 'bs'
 command: command
 cwd: "#{rally.ROOTDIR}/birdseed"
 shell_env:
-  ZOOKEEPER_CONNECT: env.zookeeper_address
-  BIRDSEED_SCHEMAS: env.schema
+  ZOOKEEPER_CONNECT:state.zookeeper_address
+  BIRDSEED_SCHEMAS:state.schema
 wait_for: /Hey little birdies, here comes your seed|(Connection timed out)/
-callback: (data, env) ->
+callback: (state, data) ->
   [match, timeout_error] = data
   if timeout_error
     util.error 'Error: Birdseed failed to connect to Marshmallow', data.input ? data

@@ -1,8 +1,8 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'Docker Oracle'
   alias: 'do'
   command: ['lein', 'start-docker-oracle']
-  cwd: "#{env.ROOTDIR}/pigeon"
+  cwd: "#{state.ROOTDIR}/pigeon"
   shell_env:
     DEV_MODE: true
 
@@ -35,8 +35,8 @@ module.exports = (env) ->
     .on_close
 
   wait_for: /WRITING JDBC CONFIG|(Conflict)/
-  callback: (data, env) ->
+  callback: (state, data) ->
     [match, exception] = data
     if exception
       util.error 'Warning: Conflict trying to create new oracle docker container.  Delete the old one'.yellow, data.input ? data
-    env
+    state

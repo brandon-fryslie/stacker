@@ -1,5 +1,5 @@
 _ = require 'lodash'
-env_lib = require './env'
+state_lib = require './state'
 repl_lib = require './repl'
 proc_lib = require './proc'
 proc_util = require './proc_util'
@@ -15,17 +15,17 @@ fs = require 'fs'
 # before continuing
 #
 ################################################################################
-run_tasks = (tasks, initial_env) ->
-  initial_env ?= env_lib.get_stacker_env()
+run_tasks = (tasks, initial_state) ->
+  initial_state ?= state_lib.get_stacker_state()
 
   final = tasks.reduce (previous, task) ->
-    previous.then((env) ->
-      start_task(task, env)
+    previous.then((state) ->
+      start_task(task, state)
     , (error) ->
       util.error 'Error handler:', error.stack
     ).catch (error) ->
       util.error 'Fail handler:', error.stack
-  , Promise.resolve initial_env
+  , Promise.resolve initial_state
 
   final.then ->
     if tasks.length > 0
@@ -60,7 +60,7 @@ start_task = (task_name) ->
       util.log_error "Task does not exist: #{task_name}"
       return Promise.resolve()
 
-    task_config = task_config_lib.get_task_config task_name, env_lib.get_stacker_env()
+    task_config = task_config_lib.get_task_config task_name, state_lib.get_stacker_state()
 
     if task_config.check?
       if !task_config.check()
@@ -72,7 +72,7 @@ start_task = (task_name) ->
     # this needs refactored out, we need to do the daemon.is_running check before we print this (so the output makes more sense)
     repl_lib.print "Starting #{task_name.cyan}".yellow
 
-    callback = task_config.callback ? (_, env) -> env
+    callback = task_config.callback ? (state) -> state
 
     # try # maybe clone repo hey why not
     #   cwd = task_config.cwd ? require.main.filename.replace(/\/[\w\-_]+$/, '')
@@ -87,9 +87,9 @@ start_task = (task_name) ->
     else
       start_foreground_task task_name, task_config, callback
 
-    promise.then (new_env) ->
-      env_lib.set_stacker_env new_env
-      resolve new_env
+    promise.then (new_state) ->
+      state_lib.set_stacker_state new_state
+      resolve new_state
     .catch (e) ->
       console.log 'starttask inner fail', err, err.stack
   .catch (e) ->
@@ -107,30 +107,30 @@ start_task = (task_name) ->
   # mproc.wait_for_once task_config.wait_for, (data) ->
   #   task_config.wait_for.exec?(data) ? [data]
 
-# Str, Map, Str, fn -> (Promise -> proc, new_env)
+# Str, Map, Str, fn -> (Promise -> proc, new_state)
 start_foreground_task = (task_name, task_config, callback) ->
   mproc = start_process task_name, task_config
 
   mproc.on_data(task_config.wait_for).then (data) ->
     data = task_config.wait_for.exec?(data) ? [data]
     try
-      new_env = callback data, env_lib.get_stacker_env()
+      new_state = callback state_lib.get_stacker_state(), data
 
       if task_config.start_message
         repl_lib.print "start message: #{task_config.start_message}"
 
       repl_lib.print "Started #{task_config.name}!".green
-      return new_env
+      return new_state
     catch e
       repl_lib.print "Failed to start #{task_config.name}!".bold
       util._log e.stack
-      return env_lib.get_stacker_env()
+      return state_lib.get_stacker_state()
 
 # Run a command
 # if id is passed in, will prefix output with that
 # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
 run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
-  shell_env = _.assign {}, env_lib.get_stacker_env().shell_env, env
+  shell_env = _.assign {}, state_lib.get_stacker_state().shell_env, env
 
   cwd ?= process.cwd()
 
@@ -145,7 +145,7 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
   pipe_output ?= true
   close_stdin ?= true
   direct ?= false
-  env = env_lib.get_shell_env shell_env
+  env = state_lib.get_shell_env shell_env
 
   mproc = mexpect.spawn
     id: id
@@ -189,7 +189,7 @@ run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
 ################################################################################
 
 
-# Str, StackerENV, Str, Fn -> (Promise -> [proc, new_env, code, signal])
+# Str, StackerENV, Str, Fn -> (Promise -> [proc, new_state, code, signal])
 #
 # Main entry point for starting daemon tasks
 #
@@ -206,7 +206,7 @@ start_daemon_task = (task_name, task_config, callback) ->
       unless code is 0
         throw "Daemon start task exited with code #{code}"
 
-      new_env = callback(data, env_lib.get_stacker_env()) # throws
+      new_state = callback state_lib.get_stacker_state(), data # throws
 
       if task_config.start_message
         repl_lib.print "start message: #{task_config.start_message}"
@@ -215,7 +215,7 @@ start_daemon_task = (task_name, task_config, callback) ->
 
       proc_lib.add_daemon task_name, task_config
 
-      new_env
+      new_state
     .catch (err) ->
       util.log_error err
       repl_lib.print "Failed to start #{task_config.name}!".red.bold

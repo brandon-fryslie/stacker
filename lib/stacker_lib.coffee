@@ -5,7 +5,7 @@ _ = require 'lodash'
 fs = require 'fs'
 repl_lib = require './repl'
 require './repl_commands'
-env_lib = require './env'
+state_lib = require './state'
 task_config_lib = require './task_config'
 task_lib = require './task'
 config = require './config_lib'
@@ -49,11 +49,11 @@ check_config = ->
     repl_lib.print "No config found. Using:".yellow, config_dir.cyan
 
 boot_stack = (should_start_repl) ->
-  env_lib.set_stacker_env args.stacker_env
+  state_lib.set_stacker_state args.stacker_state
 
   repl_lib.print 'DEBUG MODE ENABLED'.red if util.get_debug()
   check_config()
-  repl_lib.print 'IGNORE RUNNING DAEMONS: ON'.yellow if env_lib.get_stacker_env().ignore_running_daemons
+  repl_lib.print 'IGNORE RUNNING DAEMONS: ON'.yellow if state_lib.get_stacker_state().ignore_running_daemons
 
   if should_start_repl
     repl_lib.print 'Starting REPL'.bold.green
@@ -66,7 +66,7 @@ boot_stack = (should_start_repl) ->
   if tasks.length > 0
     repl_lib.print 'running tasks:', tasks.join(' ').cyan
 
-  task_lib.run_tasks tasks, env_lib.get_stacker_env()
+  task_lib.run_tasks tasks, state_lib.get_stacker_state()
 
 module.exports =
   boot: boot_stack

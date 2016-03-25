@@ -1,4 +1,4 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'Error'
   command: ['echo', 'pillow']
   cwd: '/bla/bla/bla'

@@ -4,17 +4,17 @@ config = require('./config_lib').get_config()
 ################################################################################
 # Current REPL environment - keeps track of internal state
 ################################################################################
-CURRENT_ENV = {}
+CURRENT_STATE = {}
 
-set_stacker_env = (env = CURRENT_ENV) ->
-  CURRENT_ENV = _.cloneDeep env
+set_stacker_state = (state = CURRENT_STATE) ->
+  CURRENT_STATE = _.cloneDeep state
 
-get_stacker_env = -> CURRENT_ENV
+get_stacker_state = -> CURRENT_STATE
 
 get_shell_env = (obj) ->
   _.assign {}, process.env, obj
 
 module.exports =
   get_shell_env: get_shell_env
-  get_stacker_env: get_stacker_env
-  set_stacker_env: set_stacker_env
+  get_stacker_state: get_stacker_state
+  set_stacker_state: set_stacker_state

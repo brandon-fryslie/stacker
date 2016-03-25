@@ -1,9 +1,9 @@
-module.exports = (env) ->
+module.exports = (state) ->
   name: 'realtime-nginx'
   alias: 'rn'
   command: ['realtime-nginx']
   start_message: "on #{'rally.dev:8999'.magenta}."
-  cwd: "#{env.ROOTDIR}/burro"
+  cwd: "#{state.ROOTDIR}/burro"
   wait_for: /Started/
   is_running: ->
     run_cmd
@@ -14,6 +14,6 @@ module.exports = (env) ->
       code is 0
 
   exit_command: ['nginx', '-s', 'stop']
-  callback: (data, env) ->
+  callback: (state, data) ->
     [match, pid, nginx_conf] = data
-    env
+    state
