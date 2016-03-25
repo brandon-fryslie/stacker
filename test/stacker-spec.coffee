@@ -26,6 +26,12 @@ class Stacker
     pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stdout, process.stdout
 
 describe 'Stacker', ->
+  stacker = null
+
+  afterEach ->
+    stacker?.send_cmd 'exit'
+    stacker?.wait_for /Killed running tasks!/
+
   it 'can start a foreground task', ->
     stacker = new Stacker 'test'
     stacker.wait_for [

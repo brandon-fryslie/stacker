@@ -263,3 +263,28 @@ repl_lib.add_command
     state.shell_env ?= {}
     state.shell_env[k] = v
     state_lib.set_stacker_state state
+
+################################################################################
+# exit stacker
+################################################################################
+stacker_exit = ->
+  # max timeout of 4s
+  # _.delay process.exit, 4000
+  # TODO: print PIDs of processes that could not be killed in time
+  task_lib.kill_running_tasks().then ->
+    util.print 'Killed running tasks!'.green
+
+    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split ' '
+    _.map words, (word) ->
+      setTimeout (-> process.stdout.write "#{word.blue.bold} "), t += delta
+
+    _.delay process.exit, words.length * delta
+
+repl_lib.add_command
+  name: 'exit'
+  help: 'exit stacker'
+  fn: stacker_exit
+
+module.exports = {
+  stacker_exit
+}

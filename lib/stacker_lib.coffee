@@ -4,28 +4,13 @@ require 'colors'
 _ = require 'lodash'
 fs = require 'fs'
 repl_lib = require './repl_lib'
-require './repl_commands'
+commands = require './repl_commands'
 state_lib = require './state'
 task_config_lib = require './task_config'
 task_lib = require './task'
 config = require './config_lib'
 util = require './util'
 args = require './args'
-
-################################################################################
-# exit stacker
-################################################################################
-stacker_exit = (repl) ->
-  # max timeout of 4s
-  _.delay process.exit, 4000
-  task_lib.kill_running_tasks().then ->
-    util.print 'Killed running tasks!'.green
-
-    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split ' '
-    _.map words, (word) ->
-      setTimeout (-> repl.outputStream.write "#{word.blue.bold} "), t += delta
-
-    _.delay process.exit, words.length * delta
 
 ################################################################################
 # boot stack
@@ -58,7 +43,7 @@ boot_stack = (should_start_repl) ->
   if should_start_repl
     util.print 'Starting REPL'.bold.green
     repl = repl_lib.start()
-    repl.on 'exit', -> stacker_exit repl
+    repl.on 'exit', commands.stacker_exit
 
   # get tasks_to_start
   tasks = _.map args._, task_config_lib.resolve_task_name
