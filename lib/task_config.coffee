@@ -3,6 +3,7 @@ env_lib = require './state'
 _ = require 'lodash'
 util = require './util'
 config = require './config_lib'
+exported_util = require './exported_util'
 
 ################################################################################
 # Configuration of task configs and aliass
@@ -20,21 +21,16 @@ require_task_config = _.memoize ->
 
   task_config
 
-# pass a little utility object into the env
-task_util =
-  _: _
-  print: util.repl_print
-
 register_task_config = ->
   task_config = require_task_config()
   for task_name, config of task_config
-    {alias} = config(env_lib.get_stacker_state(), task_util)
+    {alias} = config(env_lib.get_stacker_state(), exported_util)
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
 get_task_config = (task) ->
   register_task_config() unless REGISTERED
-  TASK_CONFIG[task](env_lib.get_stacker_state(), task_util)
+  TASK_CONFIG[task](env_lib.get_stacker_state(), exported_util)
 
 get_task_configs = ->
   register_task_config() unless REGISTERED

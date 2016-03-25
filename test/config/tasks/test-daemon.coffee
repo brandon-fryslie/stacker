@@ -5,7 +5,7 @@ module.exports = (state) ->
   exit_command: ['echo', 'Shutting all the shit down!']
   is_running: -> Promise.resolve false
   cleanup: ->
-    repl_lib.print 'Cleaning things up!  For serious'.yellow
+    util.print 'Cleaning things up!  For serious'.yellow
     run_cmd
       cmd: ['echo', 'Cleaning up after test daemon...']
     .on_close

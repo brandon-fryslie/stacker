@@ -19,7 +19,7 @@ prefix_print = (prefix, str...) ->
   console.log.apply @, str
 
 # exposed function for printing messages from stacker itself
-repl_print = (str...) ->
+print = (str...) ->
   str.unshift '\rstacker:'.bgWhite.black
   prefix_print.apply @, str
 
@@ -31,12 +31,12 @@ error = (msg...) ->
 # only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  repl_print.apply @, msg
+  print.apply @, msg
 
 # only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  repl_print.apply @, msg
+  print.apply @, msg
 
 # debug logging
 _log = (args...) ->
@@ -149,26 +149,26 @@ get_hostname = _.memoize -> os.hostname()
 ############ cloning shit ############
 try_to_clone = (task_name, repo_name) ->
   new Promise (resolve, reject) ->
-    repl_lib.print "You don't have #{repo_name}.  Try cloning? [yn]".yellow
+    util.print "You don't have #{repo_name}.  Try cloning? [yn]".yellow
     wait_for_keypress().then (char) ->
       repl_lib.clear_line()
       if char.toString() is 'y'
-        repl_lib.print 'Trying to clone...'.magenta
+        util.print 'Trying to clone...'.magenta
         try
           child = run_cmd
             cmd: ['git', 'clone', "git@github.com:RallySoftware/#{repo_name}.git"]
             cwd: "#{process.env.HOME}/projects"
             env: GET_ENV()
         catch e
-          repl_lib.print "error cloning repo #{repo_name}".red, e
+          util.print "error cloning repo #{repo_name}".red, e
 
         child.on 'close', ->
-          repl_lib.print 'Cloned!'.green
+          util.print 'Cloned!'.green
           resolve CURRENT_ENV
           promise = start_task task_name, GET_OPTS_FOR_TASK(task_name, CURRENT_ENV)
 
       else
-        repl_lib.print 'Not cloning'.magenta
+        util.print 'Not cloning'.magenta
         resolve CURRENT_ENV
 
 ############ / cloning shit ############
@@ -189,7 +189,7 @@ module.exports = {
   log_error
   log_proc_error
   prefix_pipe_output
-  repl_print
+  print
   trim
   color_array
   regex_extract
@@ -201,4 +201,4 @@ module.exports = {
   try_to_clone
   pretty_command_str
   beautify_obj
-}
+  }

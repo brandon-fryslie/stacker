@@ -1,4 +1,4 @@
-module.exports = (state, {_, print}) ->
+module.exports = (state, util) ->
   name: 'Marshmallow'
   alias: 'm'
   command: ['lein', 'start-infrastructure']

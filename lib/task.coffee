@@ -1,12 +1,13 @@
 _ = require 'lodash'
 state_lib = require './state'
-repl_lib = require './repl'
+repl_lib = require './repl_lib'
 proc_lib = require './proc'
 proc_util = require './proc_util'
 task_config_lib = require './task_config'
 mexpect = require './mexpect'
 util = require './util'
 fs = require 'fs'
+run_cmd = require './run_cmd'
 
 ################################################################################
 #  Run Tasks
@@ -29,7 +30,7 @@ run_tasks = (tasks, initial_state) ->
 
   final.then ->
     if tasks.length > 0
-      repl_lib.print 'Started all tasks!'.bold.green
+      util.print 'Started all tasks!'.bold.green
 
 ################################################################################
 #  Start one task
@@ -52,7 +53,7 @@ start_task = (task_name) ->
   task_name = task_config_lib.resolve_task_name task_name
 
   if _(proc_lib.all_procs()).keys().includes(task_name) or _(proc_lib.all_daemons()).keys().includes(task_name)
-    util.repl_print task_name.cyan + ' is already running!'.yellow
+    util.print task_name.cyan + ' is already running!'.yellow
     return Promise.resolve()
 
   unless task_config_lib.task_exists task_name
@@ -66,10 +67,10 @@ start_task = (task_name) ->
       util.log_error "Task #{task_name} failed prestart check"
       return Promise.resolve()
     else
-      util.repl_print "Task #{task_name} passed prestart check".green
+      util.print "Task #{task_name} passed prestart check".green
 
   # this needs refactored out, we need to do the daemon.is_running check before we print this (so the output makes more sense)
-  repl_lib.print "Starting #{task_name.cyan}".yellow
+  util.print "Starting #{task_name.cyan}".yellow
 
   callback = task_config.callback ? (state) -> state
 
@@ -118,71 +119,14 @@ start_foreground_task = (task_name, task_config, callback) ->
       new_state = callback state_lib.get_stacker_state(), data
 
       if task_config.start_message
-        repl_lib.print "start message: #{task_config.start_message}"
+        util.print "start message: #{task_config.start_message}"
 
-      repl_lib.print "Started #{task_config.name}!".green
+      util.print "Started #{task_config.name}!".green
       return new_state
     catch e
-      repl_lib.print "Failed to start #{task_config.name}!".bold
+      util.print "Failed to start #{task_config.name}!".bold
       util._log e.stack
       return state_lib.get_stacker_state()
-
-# Run a command
-# if id is passed in, will prefix output with that
-# ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
-run_cmd = ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
-  shell_env = _.assign {}, state_lib.get_stacker_state().shell_env, env
-
-  cwd ?= process.cwd()
-
-  missing_dir_error = "This task has an invalid working directory (#{cwd}).  Please check your configuration."
-  try
-    unless fs.statSync(cwd).isDirectory()
-      throw new Error missing_dir_error
-  catch e
-    throw new Error missing_dir_error
-
-  silent ?= false
-  pipe_output ?= true
-  close_stdin ?= true
-  direct ?= false
-  env = state_lib.get_shell_env shell_env
-
-  mproc = mexpect.spawn
-    id: id
-    cmd: cmd
-    cwd: cwd
-    env: env
-    silent: silent
-    pipe_output: pipe_output
-
-  stop_indicator = repl_lib.start_progress_indicator()
-  mproc.proc.stdout.on 'readable', stop_indicator
-  mproc.proc.stdout.on 'data', stop_indicator
-  mproc.proc.stderr.on 'readable', stop_indicator
-  mproc.proc.stderr.on 'data', stop_indicator
-
-  child_id = id ? "#{util.regex_extract(/\/([\w-]+)$/, cwd)}-#{cmd.join('-')}-#{mproc.proc.pid}".replace(/\s/g, '-')
-
-  mproc.on_close.then ([exit_code, signal]) ->
-    proc_lib.remove_proc child_id
-    unless silent
-      proc_util.print_process_status child_id, exit_code, signal
-    kill_tree mproc.proc.pid
-  .catch (error) -> console.log error
-
-  proc_lib.add_proc child_id, mproc.proc
-
-  if pipe_output
-    util.prefix_pipe_output child_id, mproc.proc
-
-  if close_stdin
-    mproc.proc.stdin.end()
-
-  unless silent
-    repl_lib.print util.pretty_command_str cmd, shell_env
-
-  mproc
 
 
 ################################################################################
@@ -210,36 +154,36 @@ start_daemon_task = (task_name, task_config, callback) ->
       new_state = callback state_lib.get_stacker_state(), data # throws
 
       if task_config.start_message
-        repl_lib.print "start message: #{task_config.start_message}"
+        util.print "start message: #{task_config.start_message}"
 
-      repl_lib.print "Started #{task_config.name}!".green
+      util.print "Started #{task_config.name}!".green
 
       proc_lib.add_daemon task_name, task_config
 
       new_state
     .catch (err) ->
       util.log_error err
-      repl_lib.print "Failed to start #{task_config.name}!".red.bold
-      # repl_lib.print err.stack if err.stack?
+      util.print "Failed to start #{task_config.name}!".red.bold
+      # util.print err.stack if err.stack?
 
   if task_config.ignore_running_daemons
-    repl_lib.print 'Skipping check to see if daemon is already running'.yellow
+    util.print 'Skipping check to see if daemon is already running'.yellow
     return _start_daemon_task()
 
-  repl_lib.print "Checking to see if #{task_name.cyan} is already running..."
+  util.print "Checking to see if #{task_name.cyan} is already running..."
 
   task_config.is_running.call(task_config).then (is_running) ->
     if is_running
-      repl_lib.print "Found running #{task_name}!".green
+      util.print "Found running #{task_name}!".green
       proc_lib.add_daemon task_name, task_config
       Promise.resolve()
     else
-      repl_lib.print "Did not find running #{task_name.cyan}.  Starting..."
+      util.print "Did not find running #{task_name.cyan}.  Starting..."
       _start_daemon_task()
 
   .catch (err) ->
-    repl_lib.print err.message.red
-    # repl_lib.print err.stack
+    util.print err.message.red
+    # util.print err.stack
 
 
 # (task_name, task_config) -> (Promise -> [data, code, signal])
@@ -295,10 +239,10 @@ kill_tree = (pid, signal='SIGKILL') ->
 
 # Str, TaskConfig -> Promise
 kill_daemon_task = (task_name, task_config) ->
-  repl_lib.print "Checking if #{task_name.cyan} is running..."
+  util.print "Checking if #{task_name.cyan} is running..."
 
   _kill_daemon_task = ->
-    repl_lib.print "#{'Killing daemon'.yellow} #{task_name.cyan}#{'...'.yellow}"
+    util.print "#{'Killing daemon'.yellow} #{task_name.cyan}#{'...'.yellow}"
 
     run_cmd
       cmd: task_config.exit_command
@@ -306,10 +250,10 @@ kill_daemon_task = (task_name, task_config) ->
       cwd: task_config.cwd
     .on_close.then ([code, signal]) ->
       if code is 0
-        repl_lib.print "Stopped daemon #{task_name.cyan}".green + " successfully!".green
+        util.print "Stopped daemon #{task_name.cyan}".green + " successfully!".green
         proc_lib.remove_daemon task_name
       else
-        repl_lib.print "Failed to stop daemon #{task_name.cyan}".yellow + ".  Maybe already dead?".yellow
+        util.print "Failed to stop daemon #{task_name.cyan}".yellow + ".  Maybe already dead?".yellow
     .catch (err) ->
       console.log 'error: kill daemon task'
       console.log err
@@ -321,7 +265,7 @@ kill_daemon_task = (task_name, task_config) ->
     if is_running
       _kill_daemon_task()
     else
-      repl_lib.print "#{task_name.cyan} already dead!"
+      util.print "#{task_name.cyan} already dead!"
       proc_lib.remove_daemon task_name
 
 
@@ -332,7 +276,7 @@ kill_foreground_task = (task_name, proc) ->
       resolve()
 
     kill_tree proc.pid
-    repl_lib.print "Killing #{task_name.red}..."
+    util.print "Killing #{task_name.red}..."
   .catch (error) -> console.log error
 
 # Str -> Promise
@@ -343,7 +287,7 @@ kill_task = (task_name) ->
   daemon = proc_lib.get_daemon task_name
 
   unless proc or daemon
-    repl_lib.print "No process or daemon matching '#{task_name.cyan}' found"
+    util.print "No process or daemon matching '#{task_name.cyan}' found"
     return Promise.resolve()
 
   if proc
@@ -356,7 +300,7 @@ kill_task = (task_name) ->
 
 # -> Promise
 kill_running_tasks = ->
-  repl_lib.print "Killing all tasks...".yellow
+  util.print "Killing all tasks...".yellow
   Promise.all _(proc_lib.all_procs()).keys().map(kill_task).value()
 
 module.exports = {

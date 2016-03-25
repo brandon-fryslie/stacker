@@ -1,4 +1,4 @@
-module.exports = (state) ->
+module.exports = (state, util) ->
   name: 'Docker Oracle'
   alias: 'do'
   command: ['lein', 'start-docker-oracle']
@@ -11,9 +11,9 @@ module.exports = (state) ->
   is_running: ->
     container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
 
-    util.repl_print "Looking for docker container #{container_name.cyan}..."
+    util.print "Looking for docker container #{container_name.cyan}..."
 
-    mproc = run_cmd
+    mproc = util.run_cmd
       cmd: ["docker ps -a | grep #{container_name}"]
       cwd: @cwd
       env: @shell_env
@@ -25,9 +25,9 @@ module.exports = (state) ->
   cleanup: ->
     container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
 
-    util.repl_print "Cleaning up docker container #{container_name}..."
+    util.print "Cleaning up docker container #{container_name}..."
 
-    run_cmd
+    util.run_cmd
       cmd: ["docker ps -a | grep #{container_name} | awk '{print $1}' | xargs docker rm -f"]
       cwd: @cwd
       env: @shell_env

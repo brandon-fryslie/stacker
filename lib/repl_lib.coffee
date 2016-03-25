@@ -45,7 +45,7 @@ replDefaults =
     if command
       command.fn.apply command, args
     else
-      util.repl_print 'not a command:', command_name
+      util.print 'not a command:', command_name
 
     cb()
 
@@ -119,7 +119,7 @@ patch_repl_tab_complete = (repl) ->
     # if command matches exactly, move to next index?
 
     if completions.length > 1
-      util.repl_print completions.join('  ')
+      util.print completions.join('  ')
       idx = if idx >= completions.length then 0 else idx
       completions = [completions[idx++]]
 
@@ -146,7 +146,6 @@ module.exports =
 
   get_commands: -> COMMANDS
 
-  print: util.repl_print
   start_progress_indicator: start_progress_indicator
 
   clear_line: -> REPL.rli.clearLine(process.stdin, 0)

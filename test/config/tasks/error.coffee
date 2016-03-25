@@ -4,5 +4,5 @@ module.exports = (state) ->
   start_message: 'test error'
   wait_for: /Peace in the middle east/
   callback: (a,b,c) ->
-    repl_lib.print 'error'
-    repl_lib.print a,b,c
+    util.print 'error'
+    util.print a,b,c
