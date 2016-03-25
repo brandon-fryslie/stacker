@@ -1,10 +1,7 @@
 _ = require 'lodash'
-util = require '../util/util'
+util = require './util'
 
-# configDir = process.env.STACKER_CONFIG_DIR ? "#{process.env.HOME}/.stacker"
-
-# Set this to rally-stack for now
-config_dir = process.env.STACKER_CONFIG_DIR ? "#{process.env.HOME}/projects/rally-stack/stacker/config"
+config_dir = process.env.STACKER_CONFIG_DIR ? "#{process.env.HOME}/.stacker"
 config_file = "#{config_dir}/config.coffee"
 
 module.exports =

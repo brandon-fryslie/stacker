@@ -1,5 +1,5 @@
 _ = require 'lodash'
-config = require('./config').get_config()
+config = require('./config_lib').get_config()
 
 ################################################################################
 # Current REPL environment - keeps track of internal state

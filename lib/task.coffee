@@ -2,10 +2,10 @@ _ = require 'lodash'
 env_lib = require './env'
 repl_lib = require './repl'
 proc_lib = require './proc'
-proc_util = require '../util/proc_util'
+proc_util = require './proc_util'
 task_config_lib = require './task_config'
 mexpect = require './mexpect'
-util = require '../util/util'
+util = require './util'
 fs = require 'fs'
 
 ################################################################################

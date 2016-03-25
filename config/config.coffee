@@ -42,7 +42,7 @@ module.exports =
       default: "#{process.env.HOME}/projects"
     burro_address:
       default: 'http://localhost:8855'
-    'zk':
+    'zookeeper_address':
       describe: 'zookeeper address'
       default: 'bld-zookeeper-01:2181,bld-zookeeper-02:2181,bld-zookeeper-03:2181'
     'schema':

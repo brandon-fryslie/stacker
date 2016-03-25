@@ -1,10 +1,10 @@
 _ = require 'lodash'
-proc_lib = require './lib/proc'
-repl_lib = require './lib/repl'
-task_lib = require './lib/task'
-env_lib = require './lib/env'
-task_config_lib = require './lib/task_config'
-util = require './util/util'
+proc_lib = require './proc'
+repl_lib = require './repl'
+task_lib = require './task'
+env_lib = require './env'
+task_config_lib = require './task_config'
+util = require './util'
 
 invalid_command_invocation = (cmd) ->
   util.log_error "usage: #{cmd.usage}"

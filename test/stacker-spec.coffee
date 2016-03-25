@@ -1,7 +1,7 @@
 require 'colors'
 assert = require 'assert'
 mexpect = require '../lib/mexpect'
-{ pipe_with_prefix } = require '../util/util'
+{ pipe_with_prefix } = require '../lib/util'
 _ = require 'lodash'
 
 fs = require 'fs'
@@ -28,6 +28,13 @@ class Stacker
 describe 'Stacker', ->
   it 'can start a foreground task', ->
     stacker = new Stacker 'test'
+    stacker.wait_for [
+      /Started Test!/
+      /Started all tasks!/
+    ]
+
+  it 'can start task by alias', ->
+    stacker = new Stacker 't'
     stacker.wait_for [
       /Started Test!/
       /Started all tasks!/

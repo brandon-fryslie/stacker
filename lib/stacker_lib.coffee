@@ -8,8 +8,9 @@ require './repl_commands'
 env_lib = require './env'
 task_config_lib = require './task_config'
 task_lib = require './task'
-config = require './config'
-util = require '../util/util'
+config = require './config_lib'
+util = require './util'
+args = require './args'
 
 ################################################################################
 # exit stacker
@@ -47,7 +48,9 @@ check_config = ->
     util._log e
     repl_lib.print "No config found. Using:".yellow, config_dir.cyan
 
-boot_stack = (tasks, should_start_repl) ->
+boot_stack = (should_start_repl) ->
+  env_lib.set_stacker_env args.stacker_env
+
   repl_lib.print 'DEBUG MODE ENABLED'.red if util.get_debug()
   check_config()
   repl_lib.print 'IGNORE RUNNING DAEMONS: ON'.yellow if env_lib.get_stacker_env().ignore_running_daemons
@@ -57,6 +60,9 @@ boot_stack = (tasks, should_start_repl) ->
     repl = repl_lib.start()
     repl.on 'exit', -> stacker_exit repl
 
+  # get tasks_to_start
+  tasks = _.map args._, task_config_lib.resolve_task_name
+
   if tasks.length > 0
     repl_lib.print 'running tasks:', tasks.join(' ').cyan
 
@@ -64,5 +70,3 @@ boot_stack = (tasks, should_start_repl) ->
 
 module.exports =
   boot: boot_stack
-  register_task_config: task_config_lib.register_task_config
-  initialize_env: env_lib.set_stacker_env

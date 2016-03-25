@@ -1,26 +1,15 @@
 #!/usr/bin/env coffee
-
 require('es6-promise').polyfill()
-
 require 'colors'
 _ = require 'lodash'
-rally = require './rally'
 stacker = require './lib/stacker_lib'
 opts = require './lib/args'
-util = require './util/util'
-
 require('climet-client')()
 
-# array of strings
-tasks = rally.get_tasks_to_start(opts._, opts)
-
-# must call this first because the register task config depends on it
-stacker.initialize_env opts.stacker_env
-
 process.on 'uncaughtException', (error) ->
-  util.log_error 'unhandled exception!'
+  console.log 'unhandled exception!'.red
   console.log error
   console.log error.stack
 
 # DO IT!
-stacker.boot(tasks, !opts['no-repl'])
+stacker.boot(!opts['no-repl'])
