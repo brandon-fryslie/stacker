@@ -64,9 +64,28 @@ describe 'Stacker', ->
       /Started all tasks!/
     ]
 
-  it 'passes data from task to task', ->
-    stacker = new Stacker 'test test2'
-    stacker.wait_for /start message: test2 here, checking test data: just some passed thru test data/
+  describe 'state', ->
+
+    it 'passes data from task to task', ->
+      stacker = new Stacker 'test test2'
+      stacker.wait_for /start message: test2 here, checking test data: just some passed thru test data/
+
+    it 'handles returning non-object from task callback', ->
+      stacker = new Stacker 'test-return-non-object'
+      stacker.wait_for /Started all tasks!/
+      .then ->
+        stacker.send_cmd 'env'
+        stacker.wait_for /task-argument=such a good default/
+
+    it 'copies state returned from callback onto existing state', ->
+      stacker = new Stacker 'test-return-new-state'
+      stacker.wait_for /Started all tasks!/
+      .then ->
+        stacker.send_cmd 'env'
+        stacker.wait_for [
+          /task-argument=such a good default/
+          /here=is some new state for ya/
+        ]
 
   describe 'arguments', ->
     it 'handles arguments from config file', ->

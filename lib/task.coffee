@@ -46,55 +46,56 @@ run_tasks = (tasks, initial_state) ->
 #
 # Str, StackerENV -> (Promise -> StackerENV)
 start_task = (task_name) ->
-  new Promise (resolve, reject) ->
-    unless task_name
+  unless task_name
+    return Promise.resolve()
+
+  task_name = task_config_lib.resolve_task_name task_name
+
+  if _(proc_lib.all_procs()).keys().includes(task_name) or _(proc_lib.all_daemons()).keys().includes(task_name)
+    util.repl_print task_name.cyan + ' is already running!'.yellow
+    return Promise.resolve()
+
+  unless task_config_lib.task_exists task_name
+    util.log_error "Task does not exist: #{task_name}"
+    return Promise.resolve()
+
+  task_config = task_config_lib.get_task_config task_name, state_lib.get_stacker_state()
+
+  if task_config.check?
+    if !task_config.check()
+      util.log_error "Task #{task_name} failed prestart check"
       return Promise.resolve()
-
-    task_name = task_config_lib.resolve_task_name task_name
-
-    if _(proc_lib.all_procs()).keys().includes(task_name) or _(proc_lib.all_daemons()).keys().includes(task_name)
-      util.repl_print task_name.cyan + ' is already running!'.yellow
-      return Promise.resolve()
-
-    unless task_config_lib.task_exists task_name
-      util.log_error "Task does not exist: #{task_name}"
-      return Promise.resolve()
-
-    task_config = task_config_lib.get_task_config task_name, state_lib.get_stacker_state()
-
-    if task_config.check?
-      if !task_config.check()
-        util.log_error "Task #{task_name} failed prestart check"
-        return Promise.resolve()
-      else
-        util.repl_print "Task #{task_name} passed prestart check".green
-
-    # this needs refactored out, we need to do the daemon.is_running check before we print this (so the output makes more sense)
-    repl_lib.print "Starting #{task_name.cyan}".yellow
-
-    callback = task_config.callback ? (state) -> state
-
-    # try # maybe clone repo hey why not
-    #   cwd = task_config.cwd ? require.main.filename.replace(/\/[\w\-_]+$/, '')
-    #   fs.statSync(cwd).isDirectory()
-    # catch e
-    #   repo_name = task_config.cwd.replace(/.*\/([\w\-_]+)$/, '$1')
-    #   return try_to_clone task_name, repo_name
-    # # / clone
-
-    promise = if task_config.exit_command?
-      start_daemon_task task_name, task_config, callback
     else
-      start_foreground_task task_name, task_config, callback
+      util.repl_print "Task #{task_name} passed prestart check".green
 
-    promise.then (new_state) ->
-      state_lib.set_stacker_state new_state
-      resolve new_state
-    .catch (e) ->
-      console.log 'starttask inner fail', err, err.stack
+  # this needs refactored out, we need to do the daemon.is_running check before we print this (so the output makes more sense)
+  repl_lib.print "Starting #{task_name.cyan}".yellow
+
+  callback = task_config.callback ? (state) -> state
+
+  # try # maybe clone repo hey why not
+  #   cwd = task_config.cwd ? require.main.filename.replace(/\/[\w\-_]+$/, '')
+  #   fs.statSync(cwd).isDirectory()
+  # catch e
+  #   repo_name = task_config.cwd.replace(/.*\/([\w\-_]+)$/, '$1')
+  #   return try_to_clone task_name, repo_name
+  # # / clone
+
+  promise = if task_config.exit_command?
+    start_daemon_task task_name, task_config, callback
+  else
+    start_foreground_task task_name, task_config, callback
+
+  promise.then (new_state) ->
+    new_state = if _.isObject(new_state)
+      _.assign({}, state_lib.get_stacker_state(), new_state)
+    else
+      state_lib.get_stacker_state()
+
+    state_lib.set_stacker_state new_state
+    new_state
   .catch (e) ->
-    repl_lib.print e.message.red
-    util._log e.stack
+    console.log 'starttask inner fail', e, e.stack
 
 ################################################################################
 ### Tasks
