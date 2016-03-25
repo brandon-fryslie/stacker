@@ -1,4 +1,4 @@
-module.exports = (env) ->
+module.exports = (env, {_, print}) ->
   name: 'Marshmallow'
   alias: 'm'
   command: ['lein', 'start-infrastructure']
@@ -14,7 +14,7 @@ module.exports = (env) ->
       util.error 'Error: could not find zookeeper address in: ', match
       return env
 
-    repl_lib.print 'Zookeeper Address:', zookeeper_address.magenta
+    print 'Zookeeper Address:', zookeeper_address.magenta
 
     new_env = _.assign {}, env, zookeeper_address: zookeeper_address
     new_env

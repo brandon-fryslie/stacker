@@ -1,37 +1,69 @@
+fs = require 'fs'
 env_lib = require './env_lib'
+_ = require 'lodash'
+util = require '../util/util'
+config = require './config_lib'
 
 ################################################################################
 # Configuration of task configs and aliass
 ################################################################################
+REGISTERED = false
 TASK_CONFIG = {}
 TASK_ALIAS_MAP = {}
 
-register_task_config = (task_config) ->
+require_task_config = _.memoize ->
+  task_dir = "#{config.get_config_dir()}/tasks"
+
+  task_config = {}
+  for file in fs.readdirSync(task_dir) when fs.statSync("#{task_dir}/#{file}").isFile()
+    task_config[file.replace(/\.coffee$/, '')] = require "#{task_dir}/#{file}"
+
+  task_config
+
+# pass a little utility object into the env
+task_util =
+  _: _
+  print: util.repl_print
+
+register_task_config = ->
+  task_config = require_task_config()
   for task_name, config of task_config
-    {alias} = config(env_lib.get_stacker_env())
+    {alias} = config(env_lib.get_stacker_env(), task_util)
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
-GET_OPTS_FOR_TASK = (task) ->
-  TASK_CONFIG[task](env_lib.get_stacker_env())
+get_task_config = (task) ->
+  register_task_config() unless REGISTERED
+  TASK_CONFIG[task](env_lib.get_stacker_env(), task_util)
+
+get_task_configs = ->
+  register_task_config() unless REGISTERED
+  for task, config of TASK_CONFIG
+    get_task_config task
 
 # read a property from a task
 # (string, string) -> string
 read_task_property = (task, property) ->
-  TASK_CONFIG[task](env_lib.get_stacker_env())[property]
+  get_task_config(task)[property]
 
 # does this task exist?
 # (string) -> boolean
 task_exists = (task) ->
+  register_task_config() unless REGISTERED
   TASK_CONFIG[task]?
 
-RESOLVE_TASK_NAME = (task) ->
+resolve_task_name = (task) ->
+  register_task_config() unless REGISTERED
   TASK_ALIAS_MAP[task] ? task
 
-module.exports =
-  task_exists: task_exists
-  resolve_task_name: RESOLVE_TASK_NAME
-  read_task_property: read_task_property
-  register_task_config: register_task_config
-  get_task_config: GET_OPTS_FOR_TASK
-  get_task_config_map: -> TASK_CONFIG
+get_task_config_map = -> TASK_CONFIG
+
+module.exports = {
+  task_exists
+  resolve_task_name
+  read_task_property
+  register_task_config
+  get_task_config
+  get_task_configs
+  get_task_config_map
+}

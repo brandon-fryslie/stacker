@@ -9,4 +9,7 @@ module.exports = (env) ->
       describe: 'one hell of an argument'
       default: 'such a good default'
   start_message: 'Testing a basic task...'
-  wait_for: /stacker/
+  wait_for: /(stacker)/
+  callback: (data, env) ->
+    env.test_data = 'just some passed thru test data'
+    env

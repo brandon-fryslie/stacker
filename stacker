@@ -6,10 +6,8 @@ require 'colors'
 _ = require 'lodash'
 rally = require './rally'
 stacker = require './lib/stacker_lib'
-task_config = require('./task_config').get_task_config()
-opts = require './cli_opts'
+opts = require './lib/cli_lib'
 util = require './util/util'
-config = require('./lib/config_lib').get_config()
 
 require('climet-client')()
 
@@ -18,8 +16,6 @@ tasks = rally.get_tasks_to_start(opts._, opts)
 
 # must call this first because the register task config depends on it
 stacker.initialize_env opts.stacker_env
-
-stacker.register_task_config task_config
 
 process.on 'uncaughtException', (error) ->
   util.log_error 'unhandled exception!'

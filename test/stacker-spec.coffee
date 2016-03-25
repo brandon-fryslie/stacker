@@ -57,6 +57,10 @@ describe 'Stacker', ->
       /Started all tasks!/
     ]
 
+  it 'passes data from task to task', ->
+    stacker = new Stacker 'test test2'
+    stacker.wait_for /start message: test2 here, checking test data: just some passed thru test data/
+
   describe 'arguments', ->
     it 'handles arguments from config file', ->
       stacker = new Stacker 'test'

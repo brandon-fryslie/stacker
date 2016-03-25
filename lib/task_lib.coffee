@@ -123,6 +123,7 @@ start_foreground_task = (task_name, task_config, callback) ->
       return new_env
     catch e
       repl_lib.print "Failed to start #{task_config.name}!".bold
+      util._log e.stack
       return env_lib.get_stacker_env()
 
 # Run a command

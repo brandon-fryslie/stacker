@@ -1,10 +1,8 @@
 require 'colors'
-nomnom = require 'nomnom'
-rally = require './rally'
-task_config = require('./task_config').get_task_config()
 _  = require 'lodash'
-config = require './lib/config_lib'
-util = require './util/util'
+task_config = require('./task_config_lib').get_task_configs()
+config = require './config_lib'
+util = require '../util/util'
 
 stacker = 'stacker'.magenta
 
@@ -12,13 +10,9 @@ set_yarg_opt = (opt) ->
   for key, value of opt
     yarg.option key, value
 
-task_cli_options = _.compact(
-  for name, configfn of task_config
-    configfn({}).args
-)
+task_cli_options = _(task_config).map('args').compact().value()
 
-config_cli_options =
-  config.get_config().args ? {}
+config_cli_options = config.get_config().args ? {}
 
 stacker_cli_options =
   'debug':
@@ -39,7 +33,6 @@ yarg = require('yargs')
   .option 'help',
     alias: 'h'
     describe: 'show help message'
-
 
 task_cli_options.map set_yarg_opt
 set_yarg_opt config_cli_options
@@ -70,6 +63,5 @@ nullify_args argv, stacker_cli_options
 argv.stacker_env = _.omit argv, ['_', '$0', 'h', 'help']
 
 # TODO: use task_cli_options to group the command line args
-util._log argv
 
 module.exports = argv
