@@ -28,9 +28,12 @@ class Stacker
 describe 'Stacker', ->
   stacker = null
 
-  afterEach ->
+  afterEach (done) ->
     stacker?.send_cmd 'exit'
-    stacker?.wait_for /Killed running tasks!/
+    stacker?.wait_for(/Killed running tasks!/).then -> done()
+
+    # This is to handle the case where stacker displays usage information and exits
+    stacker?.wait_for(/☃/).then -> done()
 
   it 'can start a foreground task', ->
     stacker = new Stacker 'test'
@@ -70,6 +73,19 @@ describe 'Stacker', ->
       /Started all tasks!/
     ]
 
+  describe 'help', ->
+    it 'prints out tasks in usage', ->
+      stacker = new Stacker '-h'
+      stacker.wait_for /Usage: stacker always-on-daemon cwd-missing/
+
+    it 'includes cli args from config file and always prints args hyphenated', ->
+      stacker = new Stacker '-h'
+      stacker.wait_for /--config-argument\s+good config arg  \[default: "wonderful argument"\]/
+
+    it 'includes cli args from tasks', ->
+      stacker = new Stacker '-h'
+      stacker.wait_for /--task-argument\s+one hell of an argument  \[default: "such a good default"\]/
+
   describe 'state', ->
 
     it 'passes data from task to task', ->
@@ -89,7 +105,6 @@ describe 'Stacker', ->
       .then ->
         stacker.send_cmd 'env'
         stacker.wait_for [
-          /task_argument=such a good default/
           /here=is some new state for ya/
         ]
 
@@ -107,6 +122,13 @@ describe 'Stacker', ->
       .then ->
         stacker.send_cmd 'env'
         stacker.wait_for /task_argument=such a good default/
+
+    it 'converts - to _ in cli args', ->
+      stacker = new Stacker '--testing-passing-a-hyphen'
+      stacker.wait_for /Starting REPL/
+      .then ->
+        stacker.send_cmd 'env'
+        stacker.wait_for /testing_passing_a_hyphen=true/
 
   describe 'repl commands', ->
     it 'help', ->

@@ -1,6 +1,6 @@
 require 'colors'
 _  = require 'lodash'
-task_config = require('./task_config').get_task_configs()
+task_configs = require('./task_config').get_task_configs()
 config = require './config_lib'
 util = require './util'
 
@@ -10,8 +10,8 @@ replace_keys = (obj, pattern, replacement) ->
     k = k.replace(pattern, replacement)
     "#{k}": v
 
-# These come from files in CONFIG_DIR/tasks
-task_cli_options = _(task_config).map('args').compact().value()
+# These come from CONFIG_DIR/tasks
+task_cli_options = _(task_configs).values().map('args').compact().value()
 
 # These come from CONFIG_DIR/config.coffee
 config_cli_options = config.get_config().args ? {}
@@ -33,7 +33,7 @@ cli_options = _.merge.apply _, task_cli_options.concat [config_cli_options, stac
 cli_options = replace_keys cli_options, /_/g, '-'
 
 baked_yarg = require('yargs')
-  .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ "#{Object.keys(task_config).join(' ')} ".cyan}#{'[options]'.green }"
+  .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ "#{Object.keys(task_configs).join(' ')} ".cyan}#{'[options]'.green }"
   .example "#{'stacker'.magenta} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
   .updateStrings
     'Options:': 'Options:'.green
@@ -54,13 +54,8 @@ if argv.debug
   util.set_debug()
 
 # Set 'undefined' args to null so they are preserved in the stacker state
-nullify_args = (argv, opt) ->
-  for k, v of opt
-    argv[k] = null if _.isUndefined(argv[k])
-
-nullify_args(argv, opt) for opt in task_cli_options
-nullify_args argv, config_cli_options
-nullify_args argv, stacker_cli_options
+util.object_map cli_options, (k, v) ->
+  argv[k] = null if _.isUndefined(argv[k])
 
 # convert '-' to '_' in arguments for ease of writing tasks
 argv = replace_keys argv, /-/g, '_'

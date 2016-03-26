@@ -5,7 +5,7 @@ module.exports = (state) ->
     KAFKA_QUEUE_TYPE: 'NIGHTMARE'
   command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
   args:
-    'task-argument':
+    task_argument:
       describe: 'one hell of an argument'
       default: 'such a good default'
   start_message: 'Testing a basic task...'

@@ -34,8 +34,8 @@ get_task_config = (task) ->
 
 get_task_configs = ->
   register_task_config() unless REGISTERED
-  for task, config of TASK_CONFIG
-    get_task_config task
+  util.object_map TASK_CONFIG, (task, config) ->
+    "#{task}": get_task_config task
 
 # read a property from a task
 # (string, string) -> string
