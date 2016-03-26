@@ -3,6 +3,6 @@ module.exports = (state, util) ->
   command: ['echo', 'pillow']
   cwd: '/bla/bla/bla'
   start_message: 'test missing cwd'
-  callback: (a,b,c) ->
+  callback: (a, b, c) ->
     util.print 'error'
-    util.print a,b,c
+    util.print a, b, c

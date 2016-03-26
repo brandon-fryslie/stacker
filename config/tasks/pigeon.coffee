@@ -10,8 +10,8 @@ module.exports = (state) ->
   start_message: "on #{'127.0.0.1:3200'.magenta}"
   cwd: "#{state.ROOTDIR}/pigeon"
   shell_env:
-    ZOOKEEPER_CONNECT:state.zookeeper_address
-    STACK:state.schema
+    ZOOKEEPER_CONNECT: state.zookeeper_address
+    STACK: state.schema
   args:
     'pigeon-profile':
       describe: 'pass a lein profile to pigeon'

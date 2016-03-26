@@ -140,7 +140,7 @@ module.exports =
     [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n)
 
     if major is 0 and minor < 8
-      console.warn "Node 0.8.0+ required for CoffeeScript REPL"
+      console.warn 'Node 0.8.0+ required for CoffeeScript REPL'
       process.exit 1
 
     opts = _.merge replDefaults, opts

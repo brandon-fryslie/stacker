@@ -43,7 +43,7 @@ cli_options = _.merge.apply _, task_cli_options.concat [config_cli_options, stac
 cli_options = replace_keys cli_options, /_/g, '-'
 
 baked_yarg = require('yargs')(process.argv.slice(2))
-  .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ "#{Object.keys(task_configs).join(' ')} ".cyan}#{'[options]'.green }"
+  .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ Object.keys(task_configs).join(' ').cyan}#{'[options]'.green }"
   .example "#{'stacker'.magenta} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
   .updateStrings
     'Options:': 'Options:'.green
@@ -60,7 +60,7 @@ if argv.help
   baked_yarg.showHelp 'log'
   process.exit 0
 
-if !argv.debug?
+if not argv.debug?
   delete argv.debug
 else if argv.debug.length is 0
   argv.debug = true

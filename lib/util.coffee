@@ -18,27 +18,27 @@ prefix_print = (prefix, str...) ->
     "#{s}".split('\n').join("\n#{prefix} ")
 
   move_cursor_to_beginning_of_line()
-  console.log.apply @, str
+  console.log.apply console, str
 
 # exposed function for printing messages from stacker itself
 print = (str...) ->
   str.unshift '\rstacker:'.bgWhite.black
-  prefix_print.apply @, str
+  prefix_print.apply null, str
 
 # throw exception and print error
 error = (msg...) ->
-  log_error.apply @, msg
+  log_error.apply null, msg
   throw new Error msg
 
 # only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  print.apply @, msg
+  print.apply null, msg
 
 # only print error
 log_error = (msg...) ->
   msg = color_array msg, 'red'
-  print.apply @, msg
+  print.apply null, msg
 
 # debug logging
 get_debug = ->
@@ -49,14 +49,14 @@ set_debug = (areas) ->
 
 _log = (area, args...) ->
   area = path.basename(area).replace(/\.\w+$/, '')
-  if DEBUG is true || _.includes DEBUG, area
+  if DEBUG is true or _.includes DEBUG, area
     process.stdout.write "DEBUG #{area}:".bgRed.black + ' '
     console.log.apply console, args
 
 log_proc_error = (err) ->
   msg = switch err.code
-    when 'ENOENT' then "File not found"
-    when 'EPIPE' then "Writing to closed pipe"
+    when 'ENOENT' then 'File not found'
+    when 'EPIPE' then 'Writing to closed pipe'
     else err.code
 
   log_error "Error: #{task_name} #{err.code} #{msg}"
@@ -66,18 +66,18 @@ color_array = (array, color) ->
   for s in array
     if typeof s is 'string' and s[color] then s[color] else s
 
-pretty_command_str = (command, shell_env={}) ->
-  ['$>'.gray.bold, ("#{k}".blue.bold+'='.gray+"#{v}".magenta for k, v of shell_env).join(' '), "#{command.join(' ')}".green].join(' ')
+pretty_command_str = (command, shell_env = {}) ->
+  ['$>'.gray.bold, ("#{k}".blue.bold + '='.gray + "#{v}".magenta for k, v of shell_env).join(' '), "#{command.join(' ')}".green].join(' ')
 
 beautify_obj = (obj, level = 0) ->
   res = for k, v of obj
     v = if _.isArray(v)
       if _.isEmpty(v) then '[]' else v.join(', ')
     else if _.isObject(v)
-      if _.isEmpty(v) then '{}' else '\n' + beautify_obj(v, level+1)
+      if _.isEmpty(v) then '{}' else '\n' + beautify_obj(v, level + 1)
     else
       v
-    _.repeat(' ', level*2) + "#{k}".blue.bold + '='.gray + "#{v}".magenta
+    _.repeat(' ', level * 2) + "#{k}".blue.bold + '='.gray + "#{v}".magenta
   res.join '\n'
 
 ##########################################
@@ -170,7 +170,7 @@ print_process_status = (name, exit_code, signal) ->
   print name.cyan, status
 
 # Int, Str -> ?
-kill_tree = (pid, signal='SIGKILL') ->
+kill_tree = (pid, signal = 'SIGKILL') ->
   psTree = require('ps-tree')
   psTree pid, (err, children) ->
     [pid].concat(_.map(children, 'PID')).forEach (pid) ->
@@ -219,12 +219,12 @@ start_progress_indicator = ->
 ############ / cloning shit ############
 
 ZSHMIN =
-  """ZSH=$HOME/.oh-my-zsh
+  '''ZSH=$HOME/.oh-my-zsh
 ZSH_CUSTOM=$HOME/.oh-my-zsh-custom
 ZSH_THEME="git-taculous"
 plugins=(emacs java alm appsdk git gls rally)
 source $ZSH/oh-my-zsh.sh
-export TERM=xterm-256color"""
+export TERM=xterm-256color'''
 
 module.exports = {
   get_debug: -> DEBUG

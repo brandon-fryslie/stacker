@@ -3,9 +3,8 @@ fs = require 'fs'
 path = require 'path'
 assert = require 'assert'
 mexpect = require '../lib/mexpect'
-{ pipe_with_prefix } = require '../lib/util'
+{pipe_with_prefix} = require '../lib/util'
 _ = require 'lodash'
-
 
 class Stacker
   constructor: (cmd = '', env = {}) ->

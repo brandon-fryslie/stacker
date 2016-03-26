@@ -31,10 +31,10 @@ check_config = ->
 
   catch e
     util._log __filename, e
-    util.print "No config found. Using:".yellow, config_dir.cyan
+    util.print 'No config found. Using:'.yellow, config_dir.cyan
 
-boot_stack = () ->
-  should_start_repl = !args['no-repl']
+boot_stack = ->
+  should_start_repl = not args['no-repl']
 
   state_lib.set_stacker_state args.stacker_state
 

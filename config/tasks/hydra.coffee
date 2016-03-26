@@ -5,7 +5,7 @@ module.exports = (state) ->
   start_message: "on #{'127.0.0.1:4000'.magenta}"
   cwd: "#{state.ROOTDIR}/hydra"
   shell_env:
-    ZOOKEEPER_CONNECT:state.zookeeper_address
+    ZOOKEEPER_CONNECT: state.zookeeper_address
   wait_for: /hydra listening on port 4000|(RuntimeException)/
   callback: (state, data) ->
     [match, exception] = data

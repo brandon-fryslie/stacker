@@ -101,7 +101,7 @@ class Mexpect
   # direct: run command directly (not using bash)
   spawn: (opt) =>
     {cmd, direct} = opt
-    opt =_.omit opt, ['cmd', 'direct']
+    opt = _.omit opt, ['cmd', 'direct']
 
     cmd = if _.isArray(cmd) then cmd else [cmd]
     direct ?= false
@@ -122,6 +122,7 @@ class Mexpect
           resolve [code, signal]
 
     @
+
 
 module.exports =
   spawn: ->

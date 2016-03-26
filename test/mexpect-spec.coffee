@@ -38,7 +38,7 @@ describe 'mexpect', ->
         assert.equal match, 'sugary'
 
   it 'can wait for an array', ->
-    cmd = "a quick brown fox jumps over the lazy dog".split(' ').map (s) ->
+    cmd = 'a quick brown fox jumps over the lazy dog'.split(' ').map (s) ->
       "echo #{s};"
     .join(' ')
 

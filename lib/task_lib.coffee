@@ -62,7 +62,7 @@ start_task = (task_name) ->
   task_config = task_config_lib.get_task_config task_name, state_lib.get_stacker_state()
 
   if task_config.check?
-    if !task_config.check()
+    if not task_config.check()
       util.log_error "Task #{task_name} failed prestart check"
       return Promise.resolve()
     else
@@ -148,7 +148,7 @@ start_daemon_task = (task_name, task_config, callback) ->
 
     run_mexpect_process(task_name, task_config).then ([data, code, signal]) ->
       unless code is 0
-        throw "Daemon start task exited with code #{code}"
+        throw new Error "Daemon start task exited with code #{code}"
 
       new_state = callback state_lib.get_stacker_state(), data # throws
 
@@ -239,10 +239,10 @@ kill_daemon_task = (task_name, task_config) ->
       cwd: task_config.cwd
     .on_close.then ([code, signal]) ->
       if code is 0
-        util.print "Stopped daemon #{task_name.cyan}".green + " successfully!".green
+        util.print "Stopped daemon #{task_name.cyan}".green + ' successfully!'.green
         proc_lib.remove_daemon task_name
       else
-        util.print "Failed to stop daemon #{task_name.cyan}".yellow + ".  Maybe already dead?".yellow
+        util.print "Failed to stop daemon #{task_name.cyan}".yellow + '.  Maybe already dead?'.yellow
     .catch (err) ->
       console.log 'error: kill daemon task'
       console.log err
@@ -291,7 +291,7 @@ kill_task = (task_name) ->
 
 # -> Promise
 kill_running_tasks = ->
-  util.print "Killing all tasks...".yellow
+  util.print 'Killing all tasks...'.yellow
   Promise.all _(proc_lib.all_procs()).keys().map(kill_task).value()
 
 module.exports = {

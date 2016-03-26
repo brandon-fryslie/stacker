@@ -7,7 +7,7 @@ module.exports = (state) ->
   wait_for: /Started/
   is_running: ->
     run_cmd
-      cmd: ["ps -ax | grep -v grep |  grep realtime-nginx-conf"]
+      cmd: ['ps -ax | grep -v grep |  grep realtime-nginx-conf']
       cwd: @cwd
       pipe_output: false
     .on_close.then ([code, signal]) ->

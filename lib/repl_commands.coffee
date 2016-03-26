@@ -27,7 +27,7 @@ processes_running = ->
     'No running procs!'.bold.cyan
 
   util.print if _.keys(proc_lib.all_daemons()).length
-    "\n#{'Daemons'.cyan}\n#{("#{k}\n" for k, v of proc_lib.all_daemons()).join('')}"
+    "\n#{'Daemons'.cyan}\n#{(k+'\n' for k, v of proc_lib.all_daemons()).join('')}"
   else
     'No running daemons!'.bold.cyan
 
@@ -43,10 +43,10 @@ repl_lib.add_command
   name: 'ds'
   help: 'status of daemons'
   fn: ->
-    util.print "Daemons".cyan
+    util.print 'Daemons'.cyan
 
     util.print if _.keys(proc_lib.all_daemons()).length
-      "#{("#{k}\n" for k, v of proc_lib.all_daemons()).join('')}"
+      "#{(k+'\n' for k, v of proc_lib.all_daemons()).join('')}"
     else
       'No running daemons!'.bold.cyan
 
@@ -212,8 +212,8 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'kill'
   alias: 'k'
-  help:'kill a task'
-  usage:'kill [TASK]'
+  help: 'kill a task'
+  usage: 'kill [TASK]'
   fn: (target) ->
     unless target?
       return invalid_command_invocation @
@@ -223,7 +223,7 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'killall'
   alias: 'ka'
-  help:'kill all running processes'
+  help: 'kill all running processes'
   fn: task_lib.kill_running_tasks
 
 repl_lib.add_command
@@ -275,7 +275,7 @@ stacker_exit = ->
   task_lib.kill_running_tasks().then ->
     util.print 'Killed running tasks!'.green
 
-    t = 0 ; delta = 200 ; words = "Going To Sleep Mode".split ' '
+    t = 0 ; delta = 200 ; words = 'Going To Sleep Mode'.split ' '
     _.map words, (word) ->
       setTimeout (-> process.stdout.write "#{word.blue.bold} "), t += delta
 
