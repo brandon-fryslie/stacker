@@ -30,14 +30,15 @@ module.exports = (state) ->
   shell_env: shell_env
   args:
     'with-local-appsdk':
+      alias: 'sdk'
       describe: 'Use local appsdk at ~/projects/appsdk'
     'with-local-app-catalog':
       describe: 'Use local app-catalog at ~/projects/app-catalog'
     'with-local-churro':
+      alias: 'chur'
       describe: 'Use local churro at ~/projects/churro'
   wait_for: /Started SelectChannelConnector@0.0.0.0:7001|(error)/
   callback: (state, data) ->
     [match, timeout_error] = data
     if timeout_error
       util.error 'Error: ALM failed to connect to Marshmallow', data.input ? data
-    state

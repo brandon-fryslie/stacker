@@ -144,7 +144,10 @@ clone_apply = (obj1, obj2) ->
 
 trim = (s) -> s.replace /(^\s*)|(\s*$)/g, ''
 
-get_hostname = _.memoize -> os.hostname()
+object_map = (obj, fn) ->
+  _.reduce obj, (res, v, k) ->
+    _.merge res, fn(k, v)
+  , {}
 
 # Int, Str -> ?
 kill_tree = (pid, signal='SIGKILL') ->
@@ -211,5 +214,4 @@ module.exports = {
   try_to_clone
   pretty_command_str
   beautify_obj
-  kill_tree
-}
+  }

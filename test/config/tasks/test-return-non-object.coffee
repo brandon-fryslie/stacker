@@ -1,16 +1,10 @@
 module.exports = (state) ->
-  name: 'Test'
-  alias: 't'
-  shell_env:
-    KAFKA_QUEUE_TYPE: 'NIGHTMARE'
+  name: 'Return a non object in callback'
   command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
-  args:
-    'task-argument':
-      describe: 'one hell of an argument'
-      default: 'such a good default'
-  start_message: 'Testing a basic task...'
+  start_message: 'Testing returning a non object from callback'
   wait_for: /(stacker)/
+  args:
+    nonobject:
+      default: 'its a thing!'
   callback: (state, data) ->
-    state.test_data = 'just some passed thru test data'
-    state
     null

@@ -42,9 +42,10 @@ module.exports =
       default: "#{process.env.HOME}/projects"
     burro_address:
       default: 'http://localhost:8855'
-    'zookeeper_address':
+    zookeeper_address:
+      alias: 'zk'
       describe: 'zookeeper address'
       default: 'bld-zookeeper-01:2181,bld-zookeeper-02:2181,bld-zookeeper-03:2181'
-    'schema':
+    schema:
       describe: 'pass in an alm schema name'
       default: get_schema_name()

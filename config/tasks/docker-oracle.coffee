@@ -1,3 +1,5 @@
+require 'os'
+
 module.exports = (state, util) ->
   name: 'Docker Oracle'
   alias: 'do'
@@ -9,7 +11,7 @@ module.exports = (state, util) ->
   exit_command: ['lein', 'stop-docker-oracle']
   # -> (Promise -> boolean)
   is_running: ->
-    container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
+    container_name = "dev-#{os.get_hostname().replace(/[\W]/g, '-')}-pigeon"
 
     util.print "Looking for docker container #{container_name.cyan}..."
 
@@ -23,7 +25,7 @@ module.exports = (state, util) ->
       code is 0
 
   cleanup: ->
-    container_name = "dev-#{util.get_hostname().replace(/[\W]/g, '-')}-pigeon"
+    container_name = "dev-#{os.get_hostname().replace(/[\W]/g, '-')}-pigeon"
 
     util.print "Cleaning up docker container #{container_name}..."
 

@@ -81,7 +81,7 @@ describe 'Stacker', ->
       stacker.wait_for /Started all tasks!/
       .then ->
         stacker.send_cmd 'env'
-        stacker.wait_for /task-argument=such a good default/
+        stacker.wait_for /nonobject=its a thing!/
 
     it 'copies state returned from callback onto existing state', ->
       stacker = new Stacker 'test-return-new-state'
@@ -89,7 +89,7 @@ describe 'Stacker', ->
       .then ->
         stacker.send_cmd 'env'
         stacker.wait_for [
-          /task-argument=such a good default/
+          /task_argument=such a good default/
           /here=is some new state for ya/
         ]
 
@@ -99,14 +99,14 @@ describe 'Stacker', ->
       stacker.wait_for /Started all tasks!/
       .then ->
         stacker.send_cmd 'env'
-        stacker.wait_for /config-argument=wonderful argument/
+        stacker.wait_for /config_argument=wonderful argument/
 
     it 'handles arguments from tasks', ->
       stacker = new Stacker 'test'
       stacker.wait_for /Started all tasks!/
       .then ->
         stacker.send_cmd 'env'
-        stacker.wait_for /task-argument=such a good default/
+        stacker.wait_for /task_argument=such a good default/
 
   describe 'repl commands', ->
     it 'help', ->
