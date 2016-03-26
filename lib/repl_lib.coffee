@@ -1,11 +1,9 @@
-fs = require 'fs'
-rl = require 'readline'
-path = require 'path'
-vm = require 'vm'
-nodeREPL = require 'repl'
-_ = require 'lodash'
-util = require './util'
 require 'colors'
+_ = require 'lodash'
+fs = require 'fs'
+path = require 'path'
+nodeREPL = require 'repl'
+util = require './util'
 
 # global reference to the repl
 REPL = {}
@@ -126,16 +124,6 @@ patch_repl_tab_complete = (repl) ->
     if completions.length > 0
       callback(null, [completions, line])
 
-start_progress_indicator = ->
-  fn = ->
-    rl.clearLine process.stdout, 0
-    process.stdout.write ' . '
-
-  timer = setInterval fn, 300
-
-  _.once ->
-    clearInterval timer
-
 module.exports =
   add_command: (command) ->
     COMMANDS[command.name] = command
@@ -145,8 +133,6 @@ module.exports =
   add_alias: (alias) -> _.merge(ALIAS, alias)
 
   get_commands: -> COMMANDS
-
-  start_progress_indicator: start_progress_indicator
 
   clear_line: -> REPL.rli.clearLine(process.stdin, 0)
 

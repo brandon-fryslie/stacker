@@ -2,7 +2,6 @@
 require('es6-promise').polyfill()
 require 'colors'
 _ = require 'lodash'
-opts = require './lib/arg_lib' # require this first to initialize debug settings
 stacker = require './lib/stacker_lib'
 require('climet-client')()
 
@@ -12,4 +11,4 @@ process.on 'uncaughtException', (error) ->
   console.log error.stack
 
 # DO IT!
-stacker.boot(!opts['no-repl'])
+stacker.boot()

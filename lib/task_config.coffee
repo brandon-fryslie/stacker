@@ -1,8 +1,8 @@
 fs = require 'fs'
-env_lib = require './state'
 _ = require 'lodash'
 util = require './util'
 config = require './config_lib'
+state_lib = require './state_lib'
 exported_util = require './exported_util'
 
 ################################################################################
@@ -25,13 +25,13 @@ require_task_config = _.memoize ->
 register_task_config = ->
   task_config = require_task_config()
   for task_name, config of task_config
-    {alias} = config(env_lib.get_stacker_state(), exported_util)
+    {alias} = config(state_lib.get_stacker_state(), exported_util)
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
 get_task_config = (task) ->
   register_task_config() unless REGISTERED
-  TASK_CONFIG[task](env_lib.get_stacker_state(), exported_util)
+  TASK_CONFIG[task](state_lib.get_stacker_state(), exported_util)
 
 get_task_configs = ->
   register_task_config() unless REGISTERED

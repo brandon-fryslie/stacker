@@ -3,14 +3,14 @@
 require 'colors'
 _ = require 'lodash'
 fs = require 'fs'
-repl_lib = require './repl_lib'
-commands = require './repl_commands'
-state_lib = require './state'
-task_config_lib = require './task_config'
-task_lib = require './task'
-config = require './config_lib'
 util = require './util'
-args = require './arg_lib'
+args = require './arg_lib' # require first to setup debug mode
+config = require './config_lib'
+commands = require './repl_commands'
+repl_lib = require './repl_lib'
+state_lib = require './state_lib'
+task_config_lib = require './task_config'
+task_lib = require './task_lib'
 
 ################################################################################
 # boot stack
@@ -33,7 +33,9 @@ check_config = ->
     util._log __filename, e
     util.print "No config found. Using:".yellow, config_dir.cyan
 
-boot_stack = (should_start_repl) ->
+boot_stack = () ->
+  should_start_repl = !args['no-repl']
+
   state_lib.set_stacker_state args.stacker_state
 
   util.print 'DEBUG MODE ENABLED'.red if util.get_debug()

@@ -1,12 +1,11 @@
 require 'colors'
+fs = require 'fs'
+path = require 'path'
 assert = require 'assert'
 mexpect = require '../lib/mexpect'
 { pipe_with_prefix } = require '../lib/util'
 _ = require 'lodash'
 
-fs = require 'fs'
-temp = require('temp')
-path = require 'path'
 
 class Stacker
   constructor: (cmd = '', env = {}) ->

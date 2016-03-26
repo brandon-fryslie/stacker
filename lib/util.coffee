@@ -3,6 +3,7 @@ require 'colors'
 stream = require 'stream'
 os = require 'os'
 path = require 'path'
+rl = require 'readline'
 
 DEBUG = false
 
@@ -49,7 +50,7 @@ set_debug = (areas) ->
 _log = (area, args...) ->
   area = path.basename(area).replace(/\.\w+$/, '')
   if DEBUG is true || _.includes DEBUG, area
-    process.stdout.write "DEBUG #{area}: ".bgRed.black
+    process.stdout.write "DEBUG #{area}:".bgRed.black + ' '
     console.log.apply console, args
 
 log_proc_error = (err) ->
@@ -160,6 +161,14 @@ object_map = (obj, fn) ->
     _.merge res, fn(k, v)
   , {}
 
+print_process_status = (name, exit_code, signal) ->
+  status = switch
+    when exit_code is 0 then 'exited successfully'.green
+    when exit_code? then "exited with code #{exit_code}"
+    when signal? then "exited with signal #{signal}"
+    else 'no exit code and no signal - should investigate'
+  print name.cyan, status
+
 # Int, Str -> ?
 kill_tree = (pid, signal='SIGKILL') ->
   psTree = require('ps-tree')
@@ -168,7 +177,8 @@ kill_tree = (pid, signal='SIGKILL') ->
       try
         process.kill(pid, signal)
       catch e
-        # util.error 'Error: Trying to kill', e.stack
+        if e.code isnt 'ESRCH'
+          throw e
 
 ############ cloning shit ############
 try_to_clone = (task_name, repo_name) ->
@@ -194,6 +204,17 @@ try_to_clone = (task_name, repo_name) ->
       else
         util.print 'Not cloning'.magenta
         resolve CURRENT_ENV
+
+start_progress_indicator = ->
+  fn = ->
+    rl.clearLine process.stdout, 0
+    process.stdout.write ' . '
+
+  timer = setInterval fn, 300
+
+  _.once ->
+    clearInterval timer
+
 
 ############ / cloning shit ############
 
@@ -225,4 +246,8 @@ module.exports = {
   try_to_clone
   pretty_command_str
   beautify_obj
+  object_map
+  print_process_status
+  kill_tree
+  start_progress_indicator
   }

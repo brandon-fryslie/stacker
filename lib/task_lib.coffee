@@ -1,13 +1,12 @@
 _ = require 'lodash'
-state_lib = require './state'
-repl_lib = require './repl_lib'
-proc_lib = require './proc'
-proc_util = require './proc_util'
-task_config_lib = require './task_config'
+fs = require 'fs'
 mexpect = require './mexpect'
 util = require './util'
-fs = require 'fs'
+proc_lib = require './proc_lib'
+repl_lib = require './repl_lib'
 run_cmd = require './run_cmd'
+state_lib = require './state_lib'
+task_config_lib = require './task_config'
 
 ################################################################################
 #  Run Tasks
@@ -267,7 +266,9 @@ kill_foreground_task = (task_name, proc) ->
 
     util.kill_tree proc.pid
     util.print "Killing #{task_name.red}..."
-  .catch (error) -> console.log error
+  .catch (error) ->
+    util.print 'Error killing'.red, task_name.cyan
+    util._log __filename, error.stack
 
 # Str -> Promise
 kill_task = (task_name) ->

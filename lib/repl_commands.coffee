@@ -1,10 +1,10 @@
 _ = require 'lodash'
-proc_lib = require './proc'
-repl_lib = require './repl_lib'
-task_lib = require './task'
-state_lib = require './state'
-task_config_lib = require './task_config'
 util = require './util'
+proc_lib = require './proc_lib'
+repl_lib = require './repl_lib'
+state_lib = require './state_lib'
+task_config_lib = require './task_config'
+task_lib = require './task_lib'
 
 invalid_command_invocation = (cmd) ->
   util.log_error "usage: #{cmd.usage}"
@@ -121,6 +121,7 @@ tell_target = (target, cmd) ->
       "#{process.env.HOME}/projects/#{target}"
   catch e
     unless e.code is 'ENOENT' # handle missing directory below
+      util._log __filename, e.stack
       throw e
 
   unless path?
@@ -184,7 +185,7 @@ is_daemon_running = (target) ->
 
   task_config = task_config_lib.get_task_config task_name
 
-  stop_indicator = repl_lib.start_progress_indicator()
+  stop_indicator = util.start_progress_indicator()
 
   util.print "Checking to see if #{task_name.cyan} is running..."
 
