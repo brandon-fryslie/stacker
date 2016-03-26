@@ -4,10 +4,9 @@ require 'colors'
 _ = require 'lodash'
 fs = require 'fs'
 util = require './util'
-args = require './arg_lib' # require first to setup debug mode
+{args} = require './arg_lib' # require first to setup debug mode
 config = require './config_lib'
-commands = require './repl_commands'
-repl_lib = require './repl_lib'
+repl_commands = require './repl_commands'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
 task_lib = require './task_lib'
@@ -44,8 +43,7 @@ boot_stack = ->
 
   if should_start_repl
     util.print 'Starting REPL'.bold.green
-    repl = repl_lib.start()
-    repl.on 'exit', commands.stacker_exit
+    repl_commands.start_repl()
 
   # get tasks_to_start
   tasks = _.map args._, task_config_lib.resolve_task_name
@@ -55,5 +53,7 @@ boot_stack = ->
 
   task_lib.run_tasks tasks, state_lib.get_stacker_state()
 
-module.exports =
+exports =
   boot: boot_stack
+
+module.exports[k] = v for k, v of exports

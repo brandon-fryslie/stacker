@@ -124,8 +124,7 @@ class Mexpect
     @
 
 
-module.exports =
-  spawn: ->
-    mexpect = new Mexpect
-    mexpect.spawn.apply mexpect, arguments
-    mexpect
+module.exports.spawn = ->
+  mexpect = new Mexpect
+  mexpect.spawn.apply mexpect, arguments
+  mexpect

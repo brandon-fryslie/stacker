@@ -14,7 +14,10 @@ get_stacker_state = -> CURRENT_STATE
 get_shell_env = (obj) ->
   _.assign {}, process.env, obj
 
-module.exports =
-  get_shell_env: get_shell_env
-  get_stacker_state: get_stacker_state
-  set_stacker_state: set_stacker_state
+exports = {
+  get_shell_env
+  get_stacker_state
+  set_stacker_state
+}
+
+module.exports[k] = v for k, v of exports

@@ -5,7 +5,7 @@ util = require './util'
 state_lib = require './state_lib'
 proc_lib = require './proc_lib'
 
-module.exports =
+module.exports.run_cmd =
   # Run a command
   # if id is passed in, will prefix output with that
   # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process

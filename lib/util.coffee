@@ -241,7 +241,6 @@ module.exports = {
   clone_apply
   pipe_with_prefix
   get_color_fn
-  get_hostname
   wait_for_keypress
   try_to_clone
   pretty_command_str

@@ -1,10 +1,8 @@
 _ = require 'lodash'
 fs = require 'fs'
-mexpect = require './mexpect'
 util = require './util'
 proc_lib = require './proc_lib'
-repl_lib = require './repl_lib'
-run_cmd = require './run_cmd'
+{run_cmd} = require './run_cmd'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
 
@@ -294,10 +292,11 @@ kill_running_tasks = ->
   util.print 'Killing all tasks...'.yellow
   Promise.all _(proc_lib.all_procs()).keys().map(kill_task).value()
 
-module.exports = {
-  run_cmd
+exports = {
   start_task
   run_tasks
   kill_task
   kill_running_tasks
 }
+
+module.exports[k] = v for k, v of exports

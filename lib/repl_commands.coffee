@@ -2,6 +2,7 @@ _ = require 'lodash'
 util = require './util'
 proc_lib = require './proc_lib'
 repl_lib = require './repl_lib'
+{run_cmd} = require './run_cmd'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
 task_lib = require './task_lib'
@@ -128,7 +129,7 @@ tell_target = (target, cmd) ->
     util.print "'#{target}' is not a task name or a directory in ~/projects".red
     return
 
-  task_lib.run_cmd
+  run_cmd
     cmd: cmd
     cwd: path
 
@@ -286,6 +287,12 @@ repl_lib.add_command
   help: 'exit stacker'
   fn: stacker_exit
 
-module.exports = {
-  stacker_exit
+start_repl = ->
+  repl_lib.start()
+  .on 'exit', stacker_exit
+
+exports = {
+  start_repl
 }
+
+module.exports[k] = v for k, v of exports

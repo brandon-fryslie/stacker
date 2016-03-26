@@ -55,7 +55,7 @@ resolve_task_name = (task) ->
 
 get_task_config_map = -> TASK_CONFIG
 
-module.exports = {
+exports = {
   task_exists
   resolve_task_name
   read_task_property
@@ -64,3 +64,5 @@ module.exports = {
   get_task_configs
   get_task_config_map
 }
+
+module.exports[k] = v for k, v of exports

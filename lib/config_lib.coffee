@@ -4,7 +4,7 @@ util = require './util'
 config_dir = process.env.STACKER_CONFIG_DIR ? "#{process.env.HOME}/.stacker"
 config_file = "#{config_dir}/config.coffee"
 
-module.exports =
+exports =
   get_config_dir: -> config_dir
 
   get_config_file: -> config_file
@@ -18,3 +18,5 @@ module.exports =
       console.log 'got an exception!', e.stack
       util._log __filename, e
     config
+
+module.exports[k] = v for k, v of exports

@@ -124,7 +124,7 @@ patch_repl_tab_complete = (repl) ->
     if completions.length > 0
       callback(null, [completions, line])
 
-module.exports =
+exports =
   add_command: (command) ->
     COMMANDS[command.name] = command
     if command.alias?
@@ -155,3 +155,5 @@ module.exports =
     repl.commands[getCommandId(repl, 'load')].help = 'Load code from a file into this REPL session'
 
     repl
+
+module.exports[k] = v for k, v of exports

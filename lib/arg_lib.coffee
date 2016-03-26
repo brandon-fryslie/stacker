@@ -78,4 +78,4 @@ argv.stacker_state = _.omit argv, ['_', '$0', 'h', 'help'].concat aliases
 
 # TODO: use task_cli_options to group the command line args
 
-module.exports = argv
+module.exports.args = argv

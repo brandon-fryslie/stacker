@@ -1,7 +1,7 @@
 PROCS = {}
 DAEMONS = {}
 
-module.exports =
+exports =
   add_proc: (id, proc) -> PROCS[id] = proc
 
   remove_proc: (id) -> delete PROCS[id]
@@ -17,3 +17,6 @@ module.exports =
   all_daemons: -> DAEMONS
 
   get_daemon: (id) -> DAEMONS[id]
+
+
+module.exports[k] = v for k, v of exports
