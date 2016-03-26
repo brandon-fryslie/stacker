@@ -12,8 +12,9 @@ module.exports =
   get_config: _.memoize ->
     config = {}
     try
+      util._log __filename, "requiring config file #{config_file}"
       config = require(config_file)
     catch e
       console.log 'got an exception!', e.stack
-      util._log e
+      util._log __filename, e
     config

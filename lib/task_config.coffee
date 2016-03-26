@@ -17,6 +17,7 @@ require_task_config = _.memoize ->
 
   task_config = {}
   for file in fs.readdirSync(task_dir) when fs.statSync("#{task_dir}/#{file}").isFile()
+    util._log __filename, "requiring task file #{task_dir}/#{file}"
     task_config[file.replace(/\.coffee$/, '')] = require "#{task_dir}/#{file}"
 
   task_config

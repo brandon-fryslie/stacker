@@ -2,6 +2,7 @@ _ = require 'lodash'
 require 'colors'
 stream = require 'stream'
 os = require 'os'
+path = require 'path'
 
 DEBUG = false
 
@@ -39,8 +40,16 @@ log_error = (msg...) ->
   print.apply @, msg
 
 # debug logging
-_log = (args...) ->
-  if DEBUG
+get_debug = ->
+  DEBUG
+
+set_debug = (areas) ->
+  DEBUG = areas
+
+_log = (area, args...) ->
+  area = path.basename(area).replace(/\.\w+$/, '')
+  if DEBUG is true || _.includes DEBUG, area
+    process.stdout.write "DEBUG #{area}: ".bgRed.black
     console.log.apply console, args
 
 log_proc_error = (err) ->
@@ -61,8 +70,10 @@ pretty_command_str = (command, shell_env={}) ->
 
 beautify_obj = (obj, level = 0) ->
   res = for k, v of obj
-    v = if _.isObject(v)
-      if _.isEmpty(v) then '' else '\n' + beautify_obj(v, level+1)
+    v = if _.isArray(v)
+      if _.isEmpty(v) then '[]' else v.join(', ')
+    else if _.isObject(v)
+      if _.isEmpty(v) then '{}' else '\n' + beautify_obj(v, level+1)
     else
       v
     _.repeat(' ', level*2) + "#{k}".blue.bold + '='.gray + "#{v}".magenta
@@ -196,7 +207,7 @@ export TERM=xterm-256color"""
 
 module.exports = {
   get_debug: -> DEBUG
-  set_debug: (val = true) -> DEBUG = val
+  set_debug
   _log
   error
   log_error

@@ -125,7 +125,7 @@ start_foreground_task = (task_name, task_config, callback) ->
       return new_state
     catch e
       util.print "Failed to start #{task_config.name}!".bold
-      util._log e.stack
+      util._log __filename, e.stack
       return state_lib.get_stacker_state()
 
 

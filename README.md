@@ -110,6 +110,13 @@ You can define CLI options in your configuration file.
 
 You can define CLI options in each individual task file as well.
 
+### Debugging
+
+Stacker allows you to enable debugging on a per-file basis.  Passing `--debug` on the command line will enable debuggin in all files.
+Otherwise, pass the filename (without extension) to the debug command line argument.
+
+e.g. `--debug task_config`
+
 ### testing
 
 Tests are located in ./test.

@@ -1,8 +1,18 @@
 require 'colors'
 _  = require 'lodash'
+util = require './util'
+
+# require all the debug first
+debug_opts = require('yargs')(process.argv)
+  .options debug: type: 'array'
+  .argv
+
+debug_opts.debug = true if debug_opts.debug?.length is 0
+util.set_debug(debug_opts.debug) if debug_opts.debug
+# /debug
+
 task_configs = require('./task_config').get_task_configs()
 config = require './config_lib'
-util = require './util'
 
 # do a substitution on all keys in an object
 replace_keys = (obj, pattern, replacement) ->
@@ -17,13 +27,13 @@ task_cli_options = _(task_configs).values().map('args').compact().value()
 config_cli_options = config.get_config().args ? {}
 
 stacker_cli_options =
-  'debug':
+  debug:
     describe: 'turn on debug mode'
-    default: false
-  'no-repl':
+    type: 'array'
+  no_repl:
     describe: 'do not start repl'
     default: false
-  'ignore-running-daemons':
+  ignore_running_daemons:
     describe: 'skip all is_running checks on daemons'
     default: false
 
@@ -32,7 +42,7 @@ cli_options = _.merge.apply _, task_cli_options.concat [config_cli_options, stac
 # convert '_' to '-' here for printing out the args
 cli_options = replace_keys cli_options, /_/g, '-'
 
-baked_yarg = require('yargs')
+baked_yarg = require('yargs')(process.argv.slice(2))
   .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ "#{Object.keys(task_configs).join(' ')} ".cyan}#{'[options]'.green }"
   .example "#{'stacker'.magenta} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
   .updateStrings
@@ -50,11 +60,13 @@ if argv.help
   baked_yarg.showHelp 'log'
   process.exit 0
 
-if argv.debug
-  util.set_debug()
+if !argv.debug?
+  delete argv.debug
+else if argv.debug.length is 0
+  argv.debug = true
 
 # Set 'undefined' args to null so they are preserved in the stacker state
-util.object_map cli_options, (k, v) ->
+util.object_map argv, (k, v) ->
   argv[k] = null if _.isUndefined(argv[k])
 
 # convert '-' to '_' in arguments for ease of writing tasks
