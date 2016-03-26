@@ -33,7 +33,7 @@ check_config = ->
     util.print 'No config found. Using:'.yellow, config_dir.cyan
 
 boot_stack = ->
-  should_start_repl = not args['no-repl']
+  should_start_repl = not args.no_repl
 
   state_lib.set_stacker_state args.stacker_state
 

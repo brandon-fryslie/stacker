@@ -65,6 +65,10 @@ if not argv.debug?
 else if argv.debug.length is 0
   argv.debug = true
 
+# fix this because yargs is too effing smart to get it right
+if not argv.repl
+  argv.no_repl = true
+
 # Set 'undefined' args to null so they are preserved in the stacker state
 util.object_map argv, (k, v) ->
   argv[k] = null if _.isUndefined(argv[k])

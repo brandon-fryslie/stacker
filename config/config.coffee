@@ -1,4 +1,3 @@
-_ = require 'lodash'
 fs = require 'fs'
 # Gets + Checks ALM Schema name
 
@@ -17,7 +16,7 @@ die = (msg...) ->
   console.log.apply @, msg
   process.exit 1
 
-get_schema_name = _.memoize ->
+get_schema_name = ->
   try # Get schema name from .gradle/alm.groovy
     groovy_file = fs.readFileSync "#{process.env.HOME}/.gradle/alm.groovy", 'utf8'
     active_profile = regex_extract /active\s*=\s*(\w+)/, groovy_file
@@ -35,7 +34,7 @@ get_schema_name = _.memoize ->
 
   schema_name
 
-module.exports =
+module.exports = (util) ->
   args:
     ROOTDIR:
       describe: 'the root directory for projects'
@@ -48,4 +47,5 @@ module.exports =
       default: 'bld-zookeeper-01:2181,bld-zookeeper-02:2181,bld-zookeeper-03:2181'
     schema:
       describe: 'pass in an alm schema name'
-      default: get_schema_name()
+      default: util._.memoize ->
+        get_schema_name()
