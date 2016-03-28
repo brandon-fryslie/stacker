@@ -2,7 +2,7 @@
 require('es6-promise').polyfill()
 require 'colors'
 _ = require 'lodash'
-stacker = require './lib/stacker_lib'
+stacker = require '../lib/stacker_lib'
 require('climet-client')()
 
 process.on 'uncaughtException', (error) ->
