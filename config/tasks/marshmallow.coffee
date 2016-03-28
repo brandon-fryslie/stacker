@@ -14,7 +14,7 @@ module.exports = (state, util) ->
       util.error 'Error: could not find zookeeper address in: ', match
       return state
 
-    print 'Zookeeper Address:', zookeeper_address.magenta
+    util.print 'Zookeeper Address:', zookeeper_address.magenta
 
-    new_state = _.assign {}, state, zookeeper_address: zookeeper_address
+    new_state = util._.assign {}, state, zookeeper_address: zookeeper_address
     new_state

@@ -227,16 +227,6 @@ start_process = (id, task_config) ->
 ################################################################################
 #  Kill task
 ################################################################################
-# Int, Str -> ?
-kill_tree = (pid, signal='SIGKILL') ->
-  psTree = require('ps-tree')
-  psTree pid, (err, children) ->
-    [pid].concat(_.map(children, 'PID')).forEach (pid) ->
-      try
-        process.kill(pid, signal)
-      catch e
-        # util.error 'Error: Trying to kill', e.stack
-
 # Str, TaskConfig -> Promise
 kill_daemon_task = (task_name, task_config) ->
   util.print "Checking if #{task_name.cyan} is running..."
@@ -275,7 +265,7 @@ kill_foreground_task = (task_name, proc) ->
     proc.on 'close', ->
       resolve()
 
-    kill_tree proc.pid
+    util.kill_tree proc.pid
     util.print "Killing #{task_name.red}..."
   .catch (error) -> console.log error
 

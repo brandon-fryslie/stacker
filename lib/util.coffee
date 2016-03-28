@@ -146,6 +146,16 @@ trim = (s) -> s.replace /(^\s*)|(\s*$)/g, ''
 
 get_hostname = _.memoize -> os.hostname()
 
+# Int, Str -> ?
+kill_tree = (pid, signal='SIGKILL') ->
+  psTree = require('ps-tree')
+  psTree pid, (err, children) ->
+    [pid].concat(_.map(children, 'PID')).forEach (pid) ->
+      try
+        process.kill(pid, signal)
+      catch e
+        # util.error 'Error: Trying to kill', e.stack
+
 ############ cloning shit ############
 try_to_clone = (task_name, repo_name) ->
   new Promise (resolve, reject) ->
@@ -201,4 +211,5 @@ module.exports = {
   try_to_clone
   pretty_command_str
   beautify_obj
-  }
+  kill_tree
+}

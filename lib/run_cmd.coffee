@@ -50,7 +50,7 @@ module.exports =
       proc_lib.remove_proc child_id
       unless silent
         proc_util.print_process_status child_id, exit_code, signal
-      kill_tree mproc.proc.pid
+      util.kill_tree mproc.proc.pid
     .catch (error) -> console.log error
 
     proc_lib.add_proc child_id, mproc.proc
