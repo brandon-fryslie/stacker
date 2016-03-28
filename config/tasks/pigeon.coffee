@@ -1,5 +1,5 @@
 module.exports = (state) ->
-  command = if state['pigeon-profile']?.length is 0
+  command = if !state['pigeon-profile']?
     ['lein', 'run']
   else
     ['lein', 'with-profile', state['pigeon-profile'], 'run']
@@ -11,7 +11,7 @@ module.exports = (state) ->
   cwd: "#{state.ROOTDIR}/pigeon"
   shell_env:
     ZOOKEEPER_CONNECT: state.zookeeper_address
-    STACK: state.schema
+    STACK:state.schema
   args:
     'pigeon-profile':
       describe: 'pass a lein profile to pigeon'
