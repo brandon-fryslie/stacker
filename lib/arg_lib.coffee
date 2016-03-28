@@ -30,9 +30,10 @@ stacker_cli_options =
   debug:
     describe: 'turn on debug mode'
     type: 'array'
-  no_repl:
-    describe: 'do not start repl'
-    default: false
+  repl:
+    describe: 'start stacker repl'
+    default: true
+    type: 'boolean'
   ignore_running_daemons:
     describe: 'skip all is_running checks on daemons'
     default: false
@@ -64,10 +65,6 @@ if not argv.debug?
   delete argv.debug
 else if argv.debug.length is 0
   argv.debug = true
-
-# fix this because yargs is too effing smart to get it right
-if not argv.repl
-  argv.no_repl = true
 
 # Set 'undefined' args to null so they are preserved in the stacker state
 util.object_map argv, (k, v) ->
