@@ -90,15 +90,12 @@ repl_lib.add_command
   name: 'set'
   alias: 's'
   help: 'set environment variable'
-  usage: 'set [KEY] [VALUE]'
+  usage: 'set KEY VALUE'
   fn: (k, v) ->
     unless k? and v?
       return invalid_command_invocation @
 
-    util.print 'setting'.cyan.bold, "#{k}".blue.bold, 'to'.cyan.bold, "#{v}".magenta
-
-
-    state_lib.get_stacker_state()[k] = v
+    state_lib.set_stacker_state "#{k}": v
 
 ################################################################################
 # REPL TELL
@@ -139,7 +136,7 @@ repl_lib.add_command
   tab_complete: (args) ->
     ['ronald', 'mc', 'donald']
   help: 'tell someone to do something (e.g. tell alm grunt clean build)'
-  usage: 'tell [TASK] [COMMAND]'
+  usage: 'tell TASK COMMAND'
   fn: (target, cmd...) ->
     unless target? and cmd.length
       return invalid_command_invocation @
@@ -170,7 +167,7 @@ repl_lib.add_command
   name: 'cleanup'
   alias: 'cu'
   help: 'run cleanup for a task'
-  usage: 'cleanup [TASK]'
+  usage: 'cleanup TASK'
   fn: cleanup_task
 
 # (string, [string]) -> null
@@ -201,7 +198,7 @@ repl_lib.add_command
   name: 'running'
   alias: 'r?'
   help: 'is daemon runnning?'
-  usage: 'running [TASK]'
+  usage: 'running TASK'
   fn: is_daemon_running
 
 repl_lib.add_command
@@ -214,7 +211,7 @@ repl_lib.add_command
   name: 'kill'
   alias: 'k'
   help: 'kill a task'
-  usage: 'kill [TASK]'
+  usage: 'kill TASK'
   fn: (target) ->
     unless target?
       return invalid_command_invocation @
@@ -231,7 +228,7 @@ repl_lib.add_command
   name: 'restart'
   alias: 'rs'
   help: 'restart a task'
-  usage: 'restart [TASK]'
+  usage: 'restart TASK'
   fn: (target) ->
     unless target?
       return invalid_command_invocation @
@@ -244,7 +241,7 @@ repl_lib.add_command
   name: 'run'
   alias: 'r'
   help: 'start multiple tasks'
-  usage: 'run [TASKS]'
+  usage: 'run TASKS'
   fn: (tasks...) ->
     unless tasks.length
       return invalid_command_invocation @
@@ -254,7 +251,7 @@ repl_lib.add_command
 repl_lib.add_command
   name: 'setenv'
   help: 'set a shell environment variable'
-  usage: 'setenv [KEY] [VALUE]'
+  usage: 'setenv KEY VALUE'
   fn: (k, v) ->
     unless k? and v?
       return invalid_command_invocation @
@@ -265,6 +262,17 @@ repl_lib.add_command
     state.shell_env ?= {}
     state.shell_env[k] = v
     state_lib.set_stacker_state state
+
+
+repl_lib.add_command
+  name: 'history'
+  help: 'Show n lines of command history'
+  usage: 'history [n]'
+
+  fn: (n = 10) ->
+    util.print "Stacker History".cyan.bold
+    util.print "#{(repl_lib.get_repl().rli.history[0...n].join '\n')}\n"
+
 
 ################################################################################
 # exit stacker

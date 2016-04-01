@@ -6,7 +6,7 @@ _ = require 'lodash'
 CURRENT_STATE = {}
 
 set_stacker_state = (state = CURRENT_STATE) ->
-  CURRENT_STATE = _.cloneDeep state
+  CURRENT_STATE = _.assign {}, CURRENT_STATE, state
 
 get_stacker_state = -> CURRENT_STATE
 

@@ -5,6 +5,32 @@ path = require 'path'
 nodeREPL = require 'repl'
 util = require './util'
 
+# This code is copied/modified from the CoffeeScript source code
+# from coffeescript/src/repl.coffee
+#
+# Copyright (c) 2009-2015 Jeremy Ashkenas
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following
+# conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
 # global reference to the repl
 REPL = {}
 
@@ -25,27 +51,6 @@ COMMANDS = {}
 ALIAS = {}
 
 resolve_command_name = (command) -> ALIAS[command] ? command
-
-replDefaults =
-  prompt: '> '
-  historyFile: path.join(process.env.HOME, '.stacker_history') if process.env.HOME
-  historyMaxInputSize: 10240
-  ignoreUndefined: true
-  eval: (input, context, filename, cb) ->
-    input = input.replace /\uFF00/g, '\n' # XXX: multiline hack.
-    input = input.replace /^\(([\s\S]*)\n\)$/m, '$1' # Unwrap parens + \n
-    input = input.split(' ') # split into [command arg arg arg...]
-
-    command_name = resolve_command_name util.trim(input[0])
-    args = _.map input[1...], util.trim
-
-    command = COMMANDS[command_name]
-    if command
-      command.fn.apply command, args
-    else
-      util.print 'not a command:', command_name
-
-    cb()
 
 setup_keybindings = (repl) ->
   repl.inputStream.on 'keypress', (char, key) ->
@@ -75,19 +80,12 @@ addHistory = (repl, filename, maxSize) ->
   fd = fs.openSync filename, 'a'
 
   repl.rli.addListener 'line', (code) ->
-    if code and code.length and code isnt '.history' and lastLine isnt code
+    if code and code.length and code isnt 'history' and lastLine isnt code
       # Save the latest command in the file
       fs.write fd, "#{code}\n"
       lastLine = code
 
   repl.rli.on 'exit', -> fs.close fd
-
-  # Add a command to show the history stack
-  repl.commands[getCommandId(repl, 'history')] =
-    help: 'Show command history'
-    action: ->
-      repl.outputStream.write "#{repl.rli.history[..].reverse().join '\n'}\n"
-      repl.displayPrompt()
 
 getCommandId = (repl, commandName) ->
   # Node 0.11 changed API, a command such as '.help' is now stored as 'help'
@@ -136,24 +134,39 @@ exports =
 
   clear_line: -> REPL.rli.clearLine(process.stdin, 0)
 
-  start: (opts = {}) ->
-    [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n)
+  get_repl: -> REPL
 
-    if major is 0 and minor < 8
-      console.warn 'Node 0.8.0+ required for CoffeeScript REPL'
-      process.exit 1
+  start: ->
+    opts =
+      prompt: '> '
+      historyFile: path.join(process.env.HOME, '.stacker_history') if process.env.HOME
+      historyMaxInputSize: 10240
+      ignoreUndefined: true
+      eval: (input, context, filename, cb) ->
+        input = input.replace /\uFF00/g, '\n' # XXX: multiline hack.
+        input = input.replace /^\(([\s\S]*)\n\)$/m, '$1' # Unwrap parens + \n
+        input = input.split(' ') # split into [command arg arg arg...]
 
-    opts = _.merge replDefaults, opts
-    repl = nodeREPL.start opts
-    REPL = repl
+        command_name = resolve_command_name util.trim(input[0])
+        args = _.map input[1...], util.trim
 
-    # patch_repl_tab_complete repl
+        command = COMMANDS[command_name]
+        if command
+          command.fn.apply command, args
+        else
+          util.print 'not a command:', command_name
 
-    setup_keybindings repl
-    addHistory repl, opts.historyFile, opts.historyMaxInputSize if opts.historyFile
-    # Adapt help inherited from the node REPL
-    repl.commands[getCommandId(repl, 'load')].help = 'Load code from a file into this REPL session'
+          cb()
 
-    repl
+    REPL = nodeREPL.start opts
+
+    # patch_repl_tab_complete REPL
+
+    setup_keybindings REPL
+
+    if opts.historyFile
+      addHistory REPL, opts.historyFile, opts.historyMaxInputSize
+
+    REPL
 
 module.exports[k] = v for k, v of exports

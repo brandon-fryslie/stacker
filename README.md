@@ -23,13 +23,13 @@ module.exports = (state) ->
   alias: 't'
   shell_env:
     KAFKA_QUEUE_TYPE: 'NIGHTMARE'
-  command: ['tail', '-f', "#{process.env.HOME}/projects/rally-stack/bin/stacker"]
+  command: ['echo', 'Hi there!']
   args:
     'task-argument':
       describe: 'one hell of an argument'
       default: 'such a good default'
   start_message: 'Testing a basic task...'
-  wait_for: /(stacker)/
+  wait_for: /(There!)/
   callback: (state, data) ->
     state.test_data = 'just some passed thru test data'
     here: 'is some new state for ya'
@@ -126,6 +126,6 @@ Yu must have Mocha: `npm install -g mocha`
 Then, run these commands:
 
 ```
-cd ~/projects/rally-stack/stacker
+cd stacker/test
 npm test
 ```
