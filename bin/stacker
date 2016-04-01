@@ -1,13 +1,12 @@
-#!/usr/bin/env coffee
-require('es6-promise').polyfill()
-require 'colors'
-_ = require 'lodash'
-stacker = require '../lib/stacker_lib'
+#!/usr/bin/env node
+require('coffee-script/register');
+require('es6-promise').polyfill();
+require('colors');
 
-process.on 'uncaughtException', (error) ->
-  console.log 'unhandled exception!'.red
-  console.log error
-  console.log error.stack
+process.on('uncaughtException', function(error) {
+  console.log('unhandled exception!'.red);
+  console.log(error);
+  console.log(error.stack);
+});
 
-# DO IT!
-stacker.boot()
+require('../lib/stacker_lib').boot();

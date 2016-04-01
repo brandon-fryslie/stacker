@@ -1,0 +1,4 @@
+.npmignore
+.test
+coffeelint.json
+etc/dep-graph

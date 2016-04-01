@@ -75,7 +75,7 @@ argv = replace_keys argv, /-/g, '_'
 
 # we omit these keys and all aliases from the stacker state
 aliases = _(cli_options).map('alias').compact().value()
-argv.stacker_state = _.omit argv, ['_', '$0', 'h', 'help'].concat aliases
+argv.stacker_state = _.omit argv, ['_', '$0', 'h', 'help', 'repl'].concat aliases
 
 # TODO: use task_cli_options to group the command line args
 
