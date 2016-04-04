@@ -15,10 +15,9 @@ exports =
     try
       util._log __filename, "requiring config file #{config_file}"
       config = require config_file
-      config = config(exported_util) if _.isFunction config
     catch e
       console.log 'got an exception!', e.stack
       util._log __filename, e
-    config
+    config?(exported_util) ? config
 
 module.exports[k] = v for k, v of exports

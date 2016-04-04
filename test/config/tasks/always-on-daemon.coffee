@@ -9,7 +9,6 @@ module.exports = (state, util) ->
     run_cmd
       cmd: ['echo', 'Cleaning up after test daemon...']
     .on_close
-  cwd: "#{state.ROOTDIR}/rally-stack/stacker/etc"
   start_message: 'daemon is always running'
   onClose: (code, signal) ->
     run_cmd cmd: ['echo', 'Exit command run!']

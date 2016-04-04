@@ -10,6 +10,7 @@ module.exports.run_cmd =
   # if id is passed in, will prefix output with that
   # ({cmd: [string], task_name: string, cwd: string, env: map, silent: boolean, pipe_output: boolean}) -> child_process
   ({cmd, id, cwd, env, silent, pipe_output, close_stdin, direct}) ->
+    cmd = if _.isString(cmd) then [cmd] else cmd
     cwd ?= process.cwd()
 
     missing_dir_error = "This task has an invalid working directory (#{cwd}).  Please check your configuration."

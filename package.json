@@ -2,7 +2,11 @@
   "name": "boot-stacker",
   "version": "0.1.0",
   "description": "Boot your stack.  Simple, flexible, magical manager for running tasks and applications of all sorts.",
-  "keywords": ["stacker", "cli", "task-runner"],
+  "keywords": [
+    "stacker",
+    "cli",
+    "task-runner"
+  ],
   "bin": {
     "stacker": "bin/stacker"
   },
@@ -29,5 +33,8 @@
   "preferGlobal": true,
   "yargs": {
     "camel-case-expansion": false
+  },
+  "devDependencies": {
+    "mocha.parallel": "^0.12.0"
   }
 }

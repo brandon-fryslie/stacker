@@ -1,25 +1,5 @@
-# tool to test shell programs
-#
-# helpers for mocha
-#
-# that can test
-#
-# the relevent pieces are :
-#
-# input -
-#
-# command
-# environment variables
-# working directory
-#
-# output -
-#
-# stdout/stderr
-# code, signal
-#
-
+parallel = require 'mocha.parallel'
 assert = require 'assert'
-
 mexpect = require '../lib/mexpect'
 
 assert_exit_status = (cmd, expected_code, expected_signal) ->
@@ -37,7 +17,7 @@ spawn_and_match_err = (cmd, expectation) ->
   mexpect.spawn { cmd }
   .on_err expectation
 
-describe 'shelltest', ->
+parallel 'shelltest', ->
   it 'can check the output of a successful shell command', ->
     assert_exit_status 'echo muffins', 0
 

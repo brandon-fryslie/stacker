@@ -1,3 +1,4 @@
+parallel = require 'mocha.parallel'
 assert = require 'assert'
 
 mexpect = require '../lib/mexpect'
@@ -17,7 +18,7 @@ spawn_and_match_err = (cmd, expectation) ->
   mexpect.spawn { cmd }
   .on_err expectation
 
-describe 'mexpect', ->
+parallel 'mexpect', ->
   it 'can wait for a string', (done) ->
     mexpect.spawn { cmd: 'echo muffins' }
     .on_data('muffins').then (match) ->

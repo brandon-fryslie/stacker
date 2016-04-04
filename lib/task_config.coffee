@@ -31,7 +31,8 @@ register_task_config = ->
 
 get_task_config = (task) ->
   register_task_config() unless REGISTERED
-  TASK_CONFIG[task](state_lib.get_stacker_state(), exported_util)
+  config = TASK_CONFIG[task]
+  config?(state_lib.get_stacker_state(), exported_util) ? config
 
 get_task_configs = ->
   register_task_config() unless REGISTERED
