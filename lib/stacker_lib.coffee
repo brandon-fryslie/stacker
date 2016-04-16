@@ -20,11 +20,11 @@ check_config = ->
   config_dir = config.get_config_dir()
   config_file = config.get_config_file()
   try
-    fs.stat(config_dir)
+    fs.statSync(config_dir)
     util.print "Using config dir: #{config_dir.cyan}"
 
     try
-      fs.stat("#{config_dir}/config.coffee")
+      fs.statSync("#{config_dir}/config.coffee")
       util.print "Using config file: #{config_file.cyan}"
     catch
 

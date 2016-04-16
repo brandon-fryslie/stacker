@@ -45,7 +45,7 @@ cli_options = replace_keys cli_options, /_/g, '-'
 
 baked_yarg = require('yargs')(process.argv.slice(2))
   .usage "#{'Usage:'.yellow} #{'stacker'.magenta} #{ Object.keys(task_configs).join(' ').cyan}#{'[options]'.green }"
-  .example "#{'stacker'.magenta} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
+  .example "\nstacker config dir: #{process.env.STACKER_CONFIG_DIR}\n\n#{'stacker'.magenta} #{'marshmallow zuul burro alm pigeon'.cyan} #{'--with-local-churro'.green}", 'start the realtime stack with local churro'
   .updateStrings
     'Options:': 'Options:'.green
   .option 'help',
@@ -53,7 +53,7 @@ baked_yarg = require('yargs')(process.argv.slice(2))
     describe: 'show help message'
   .options cli_options
   .epilog '☃'.bold
-  .wrap null
+  .wrap null # turns off automatic line wrapping
 
 {argv} = baked_yarg
 

@@ -1,11 +1,13 @@
+_ = require 'lodash'
 require 'colors'
-{pipe_with_prefix} = require '../lib/util'
+temp = require 'temp'
+fs = require 'fs'
+util = require '../lib/util'
 mexpect = require '../lib/mexpect'
 
 Stacker = class Stacker
   constructor: (cmd = '', env = {}) ->
     stacker_bin = "#{__dirname}/../bin/stacker"
-    env.STACKER_CONFIG_DIR = "#{__dirname}/config"
     @mproc = mexpect.spawn
       cmd: "#{stacker_bin} #{cmd}"
       env: env
@@ -18,16 +20,30 @@ Stacker = class Stacker
     @mproc.proc.stdin.write "#{cmd}\n"
 
   engageOutput: ->
-    pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stdout, process.stdout
-    pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stderr, process.stderr
+    util.pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stdout, process.stdout
+    util.pipe_with_prefix '---- stacker output'.magenta, @mproc.proc.stderr, process.stderr
 
   exit: ->
     @send_cmd 'exit'
     # The snowman is there to handle the case where stacker displays usage information and exits
     @wait_for(/Killed running tasks!|☃/)
 
-with_stacker = (cmd, fn) ->
-  stacker = new Stacker cmd
+with_stacker = (opt, fn) ->
+  dirPath = null
+  if opt.stacker_config? or !_.isEmpty opt.task_config
+    dirPath = temp.mkdirSync()
+    opt.env ?= {}
+    opt.env.STACKER_CONFIG_DIR = dirPath
+
+  if opt.stacker_config?
+    fs.writeFileSync "#{dirPath}/config.coffee", opt.stacker_config
+
+  if !_.isEmpty opt.task_config
+    fs.mkdirSync("#{dirPath}/tasks")
+    for name, config of opt.task_config
+      fs.writeFileSync "#{dirPath}/tasks/#{name}.coffee", config
+
+  stacker = new Stacker opt.cmd, opt.env
   fn(stacker).then ->
     stacker.exit()
 
