@@ -16,16 +16,14 @@ task_config_fn = """
     wait_for: 'Started'
   """
 
-parallel 'config', ->
+parallel 'task config', ->
   it 'can use a config that is a plain JS object', ->
     with_stacker
       cmd: 'test'
       task_config:
         'test': task_config_plain_js
     , (stacker) ->
-      stacker.wait_for [
-        /Started Plain JS!/
-      ]
+      stacker.wait_for /Started Plain JS!/
 
   it 'can use a config that is a fn', ->
     with_stacker
@@ -33,6 +31,35 @@ parallel 'config', ->
       task_config:
         'test-fn': task_config_fn
     , (stacker) ->
-      stacker.wait_for [
-        /Started Fn!/
-      ]
+      stacker.wait_for /Started Fn!/
+
+stacker_config_plain_js = """
+module.exports =
+  args:
+    config_argument:
+      default: 'wonderful argument'
+"""
+
+stacker_config_fn = """
+module.exports = ->
+  args:
+    config_argument:
+      default: 'wonderful argument'
+"""
+
+parallel 'stacker config', ->
+  it 'can use a config that is a plain JS object', ->
+    with_stacker
+      cmd: ''
+      stacker_config: stacker_config_plain_js
+    , (stacker) ->
+      stacker.send_cmd 'env'
+      stacker.wait_for /config_argument=wonderful argument/
+
+  it 'can use a config that is a fn', ->
+    with_stacker
+      cmd: ''
+      stacker_config: stacker_config_fn
+    , (stacker) ->
+      stacker.send_cmd 'env'
+      stacker.wait_for /config_argument=wonderful argument/
