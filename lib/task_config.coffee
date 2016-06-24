@@ -29,7 +29,11 @@ require_task_config = _.memoize ->
 register_task_config = ->
   task_config = require_task_config()
   for task_name, config of task_config
-    {alias} = config(state_lib.get_stacker_state(), exported_util)
+    {alias} = if _.isFunction config
+      config(state_lib.get_stacker_state(), exported_util)
+    else
+      config
+
     TASK_ALIAS_MAP[alias] = task_name
   TASK_CONFIG = task_config
 
