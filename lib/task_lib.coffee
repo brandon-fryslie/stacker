@@ -5,6 +5,7 @@ proc_lib = require './proc_lib'
 {run_cmd} = require './run_cmd'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
+_log = (args...) -> util.debug_log.apply null, [__filename].concat args
 
 ################################################################################
 #  Run Tasks
@@ -122,7 +123,7 @@ start_foreground_task = (task_name, task_config, callback) ->
       return new_state
     catch e
       util.print "Failed to start #{task_config.name}!".bold
-      util._log __filename, e.stack
+      _log e.stack
       return state_lib.get_stacker_state()
 
 
@@ -262,11 +263,11 @@ kill_foreground_task = (task_name, proc) ->
     proc.on 'close', ->
       resolve()
 
-    util.kill_tree proc.pid
     util.print "Killing #{task_name.red}..."
+    util.kill_tree proc.pid
   .catch (error) ->
     util.print 'Error killing'.red, task_name.cyan
-    util._log __filename, error.stack
+    _log error.stack
 
 # Str -> Promise
 kill_task = (task_name) ->

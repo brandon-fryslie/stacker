@@ -4,6 +4,7 @@ mexpect = require './mexpect'
 util = require './util'
 state_lib = require './state_lib'
 proc_lib = require './proc_lib'
+_log = (args...) -> util.debug_log.apply null, [__filename].concat args
 
 module.exports.run_cmd =
   # Run a command
@@ -18,7 +19,7 @@ module.exports.run_cmd =
       unless fs.statSync(cwd).isDirectory()
         throw new Error missing_dir_error
     catch e
-      util._log __filename, e.stack
+      _log e.stack
       throw new Error missing_dir_error
 
     silent ?= false
@@ -52,7 +53,7 @@ module.exports.run_cmd =
       util.kill_tree mproc.proc.pid
     .catch (error) ->
       console.log error
-      util._log __filename, error.stack
+      _log error.stack
 
     proc_lib.add_proc child_id, mproc.proc
 

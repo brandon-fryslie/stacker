@@ -47,11 +47,15 @@ get_debug = ->
 set_debug = (areas) ->
   DEBUG = areas
 
-_log = (area, args...) ->
+debug_log = (area, args...) ->
   area = path.basename(area).replace(/\.\w+$/, '')
   if DEBUG is true or _.includes DEBUG, area
     process.stdout.write "DEBUG #{area}:".bgRed.black + ' '
     console.log.apply console, args
+
+# Boilerplate fn to prevent needing to always pass __filename
+# I'll keep looking for a better solution
+_log = (args...) -> debug_log.apply null, [__filename].concat args
 
 log_proc_error = (err) ->
   msg = switch err.code
@@ -229,7 +233,7 @@ export TERM=xterm-256color'''
 module.exports = {
   get_debug: -> DEBUG
   set_debug
-  _log
+  debug_log
   error
   log_error
   log_proc_error

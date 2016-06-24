@@ -4,6 +4,7 @@ util = require './util'
 config = require './config_lib'
 state_lib = require './state_lib'
 exported_util = require './exported_util'
+_log = (args...) -> util.debug_log.apply null, [__filename].concat args
 
 ################################################################################
 # Configuration of task configs and aliass
@@ -19,7 +20,7 @@ require_task_config = _.memoize ->
 
   try
     for file in fs.readdirSync(task_dir, ->) when fs.statSync("#{task_dir}/#{file}").isFile()
-      util._log __filename, "requiring task file #{task_dir}/#{file}"
+      _log "requiring task file #{task_dir}/#{file}"
       task_config[file.replace(/\.coffee$/, '')] = require "#{task_dir}/#{file}"
   catch e
 

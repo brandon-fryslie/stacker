@@ -10,6 +10,7 @@ repl_commands = require './repl_commands'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
 task_lib = require './task_lib'
+_log = (args...) -> util.debug_log.apply null, [__filename].concat args
 
 ################################################################################
 # boot stack
@@ -29,7 +30,7 @@ check_config = ->
     catch
 
   catch e
-    util._log __filename, e
+    _log e
     util.print 'No config found. Using:'.yellow, config_dir.cyan
 
 boot_stack = ->

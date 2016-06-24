@@ -6,6 +6,7 @@ repl_lib = require './repl_lib'
 state_lib = require './state_lib'
 task_config_lib = require './task_config'
 task_lib = require './task_lib'
+_log = (args...) -> util.debug_log.apply null, [__filename].concat args
 
 invalid_command_invocation = (cmd) ->
   util.log_error "usage: #{cmd.usage}"
@@ -119,7 +120,7 @@ tell_target = (target, cmd) ->
       "#{process.env.HOME}/projects/#{target}"
   catch e
     unless e.code is 'ENOENT' # handle missing directory below
-      util._log __filename, e.stack
+      _log e.stack
       throw e
 
   unless path?
