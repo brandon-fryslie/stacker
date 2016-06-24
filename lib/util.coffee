@@ -177,8 +177,11 @@ print_process_status = (name, exit_code, signal) ->
 kill_tree = (pid, signal = 'SIGKILL') ->
   psTree = require('ps-tree')
   psTree pid, (err, children) ->
-    [pid].concat(_.map(children, 'PID')).forEach (pid) ->
+    pids = [pid].concat _.map(children, 'PID')
+    _log "Killing procs with PIDs: #{pids.join(', ')}"
+    pids.forEach (pid) ->
       try
+        _log "Killing PID #{pid}..."
         process.kill(pid, signal)
       catch e
         if e.code isnt 'ESRCH'

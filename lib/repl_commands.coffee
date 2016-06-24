@@ -280,6 +280,13 @@ repl_lib.add_command
 ################################################################################
 stacker_exit = ->
   # max timeout of 4s
+
+  _.delay ->
+    console.log 'ALL TASKS DID NOT EXIT IN 4 SECONDS'.red
+    console.log "Left dangling procs with PIDs #{_.map(proc_lib.all_procs(), 'pid').join ', '}".yellow
+    process.exit 1
+  , 4000
+
   # _.delay process.exit, 4000
   # TODO: print PIDs of processes that could not be killed in time
   task_lib.kill_running_tasks().then ->
@@ -289,7 +296,7 @@ stacker_exit = ->
     _.map words, (word) ->
       setTimeout (-> process.stdout.write "#{word.blue.bold} "), t += delta
 
-    _.delay process.exit, words.length * delta
+    _.delay (-> process.exit 0), words.length * delta
 
 repl_lib.add_command
   name: 'exit'
