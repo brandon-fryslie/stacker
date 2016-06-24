@@ -51,6 +51,10 @@ parallel 'mexpect', ->
       assert.equal 'h',     match[3]
       assert.equal 'dog',   match[4]
 
+  it 'can wait for nothing', ->
+    mexpect.spawn { cmd: 'echo testing the abyss' }
+    .on_data()
+
   it 'can attach a wait_for later', ->
     mproc = mexpect.spawn { cmd: 'echo Hideeho' }
 

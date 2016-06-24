@@ -3,6 +3,7 @@ require('es6-promise').polyfill()
 child_process = require 'child_process'
 stream = require 'stream'
 _ = require 'lodash'
+assert = require 'assert'
 
 # this should be a utility somewhere...
 
@@ -42,6 +43,8 @@ create_prefix_transform_stream = (prefix) ->
     @push "#{prefix} #{line}\n"
 
 create_callback_transform_stream = (expectation, cb) ->
+  assert_valid_expectation expectation
+
   create_transform_stream (line) ->
     line = line.toString().replace(/\u001b\[\d{0,2}m/g, '')
     if expectation.test? and expectation.test(line) or line.toString().indexOf?(expectation) > -1
@@ -54,11 +57,16 @@ clone_apply = (obj1, obj2) ->
   newObj[k] = v for k, v of obj2
   newObj
 
+assert_valid_expectation = (expectations) ->
+  assert (_.isArray(expectations) && expectations.length) || _.isRegExp(expectations) || _.isString(expectations)
+
 class Mexpect
 
-  on_data: (expectations, cb) =>
+  on_data: (expectations = '') =>
     expectations = [].concat expectations
     output = []
+
+    assert_valid_expectation expectations
 
     final = expectations.reduce (previous, expectation) =>
       previous.then =>
@@ -69,7 +77,7 @@ class Mexpect
 
     final.then (match) -> output
 
-  _on_data_single: (expectation, cb) ->
+  _on_data_single: (expectation) ->
     new Promise (resolve, reject) =>
       cb_stream = create_callback_transform_stream expectation, (matches) =>
         @stdout.unpipe cb_stream
@@ -79,6 +87,8 @@ class Mexpect
 
 
   on_err: (expectation) ->
+    assert_valid_expectation expectation
+
     new Promise (resolve, reject) =>
       cb_stream = create_callback_transform_stream expectation, (matches) =>
         @stderr.unpipe cb_stream
