@@ -4,6 +4,7 @@ stream = require 'stream'
 os = require 'os'
 path = require 'path'
 rl = require 'readline'
+fs = require 'fs'
 
 DEBUG = false
 
@@ -222,16 +223,10 @@ start_progress_indicator = ->
   _.once ->
     clearInterval timer
 
-
 ############ / cloning shit ############
 
-ZSHMIN =
-  '''ZSH=$HOME/.oh-my-zsh
-ZSH_CUSTOM=$HOME/.oh-my-zsh-custom
-ZSH_THEME="git-taculous"
-plugins=(emacs java alm appsdk git gls rally)
-source $ZSH/oh-my-zsh.sh
-export TERM=xterm-256color'''
+get_current_version = ->
+  JSON.parse(fs.readFileSync "#{__dirname}/../package.json").version
 
 module.exports = {
   get_debug: -> DEBUG
@@ -256,4 +251,5 @@ module.exports = {
   print_process_status
   kill_tree
   start_progress_indicator
+  get_current_version
   }

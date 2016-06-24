@@ -51,6 +51,9 @@ baked_yarg = require('yargs')(process.argv.slice(2))
   .option 'help',
     alias: 'h'
     describe: 'show help message'
+  .option 'version',
+    alias: 'v'
+    describe: 'show version'
   .options cli_options
   .epilog '☃'.bold
   .wrap null # turns off automatic line wrapping
@@ -59,6 +62,10 @@ baked_yarg = require('yargs')(process.argv.slice(2))
 
 if argv.help
   baked_yarg.showHelp 'log'
+  process.exit 0
+
+if argv.version
+  console.log util.get_current_version()
   process.exit 0
 
 if not argv.debug?
