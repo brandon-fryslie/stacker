@@ -29,17 +29,17 @@ Stacker = class Stacker
     @wait_for(/Killed running tasks!|☃/)
 
 with_stacker = (opt, fn) ->
-  dirPath = null
-  if opt.stacker_config? or !_.isEmpty opt.task_config
-    dirPath = temp.mkdirSync()
-    opt.env ?= {}
-    opt.env.STACKER_CONFIG_DIR = dirPath
+  # Create stacker config path
+  dirPath = temp.mkdirSync()
+  fs.mkdirSync("#{dirPath}/tasks")
+  fs.writeFileSync "#{dirPath}/config.coffee", opt.stacker_config
 
-  if opt.stacker_config?
-    fs.writeFileSync "#{dirPath}/config.coffee", opt.stacker_config
+  # Setup stacker config path
+  opt.env ?= {}
+  opt.env.STACKER_CONFIG_DIR = dirPath
 
+  # Setup task configs
   if !_.isEmpty opt.task_config
-    fs.mkdirSync("#{dirPath}/tasks")
     for name, config of opt.task_config
       fs.writeFileSync "#{dirPath}/tasks/#{name}.coffee", config
 

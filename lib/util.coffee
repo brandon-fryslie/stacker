@@ -36,10 +36,10 @@ log_error = (msg...) ->
   msg = color_array msg, 'red'
   print.apply null, msg
 
-# only print error
-log_error = (msg...) ->
-  msg = color_array msg, 'red'
-  print.apply null, msg
+# print error and exit with status code 1
+die = (msg...) ->
+  log_error.apply null, msg
+  process.exit 1
 
 # debug logging
 get_debug = ->
@@ -229,27 +229,28 @@ get_current_version = ->
   JSON.parse(fs.readFileSync "#{__dirname}/../package.json").version
 
 module.exports = {
-  get_debug: -> DEBUG
-  set_debug
+  beautify_obj
+  clone_apply
+  color_array
   debug_log
+  die
   error
+  get_color_fn
+  get_current_version
+  get_debug: -> DEBUG
+  kill_tree
   log_error
   log_proc_error
-  prefix_pipe_output
-  print
-  trim
-  color_array
-  regex_extract
-  clone_apply
-  pipe_with_prefix
-  get_color_fn
-  wait_for_keypress
-  try_to_clone
-  pretty_command_str
-  beautify_obj
   object_map
+  pipe_with_prefix
+  prefix_pipe_output
+  pretty_command_str
+  print
   print_process_status
-  kill_tree
+  regex_extract
+  set_debug
   start_progress_indicator
-  get_current_version
-  }
+  trim
+  try_to_clone
+  wait_for_keypress
+}
