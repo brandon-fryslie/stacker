@@ -1,6 +1,6 @@
 {
   "name": "boot-stacker",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Boot your stack.  Simple, flexible, magical manager for running tasks and applications of all sorts.",
   "keywords": [
     "stacker",
