@@ -19,10 +19,18 @@ require_task_config = _.memoize ->
   task_config = {}
 
   try
-    for file in fs.readdirSync(task_dir, ->) when fs.statSync("#{task_dir}/#{file}").isFile()
-      _log "requiring task file #{task_dir}/#{file}"
-      task_config[file.replace(/\.coffee$/, '')] = require "#{task_dir}/#{file}"
+    files = (file for file in fs.readdirSync(task_dir, ->) when fs.statSync("#{task_dir}/#{file}").isFile())
   catch e
+    util.die "Error: could not find tasks directory #{task_dir}"
+
+  for file in files
+    _log "requiring task file #{task_dir}/#{file}"
+    try
+      config_file_path = "#{task_dir}/#{file}"
+      task_config[file.replace(/\.coffee$/, '')] = require config_file_path
+    catch e
+      util.log_error "Error: Could not require task config file '#{config_file_path}'.  Please check the syntax.".red
+      _log e
 
   task_config
 

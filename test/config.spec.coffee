@@ -16,6 +16,11 @@ task_config_fn = """
     wait_for: 'Started'
   """
 
+task_config_invalid = """
+  module.exports = (state, util) ->
+    name:
+  """
+
 parallel 'task config', ->
   it 'can use a config that is a plain JS object', ->
     with_stacker
@@ -33,6 +38,14 @@ parallel 'task config', ->
     , (stacker) ->
       stacker.wait_for /Started Fn!/
 
+  it 'throws an error when requiring an invalid task config', ->
+    with_stacker
+      cmd: 'test-fn'
+      task_config:
+        'test-fn': task_config_invalid
+    , (stacker) ->
+      stacker.wait_for /Error: Could not require task config file/
+
 stacker_config_plain_js = """
 module.exports =
   args:
@@ -45,6 +58,11 @@ module.exports = ->
   args:
     config_argument:
       default: 'wonderful argument'
+"""
+
+stacker_config_invalid = """
+module.exports = ->
+  args:
 """
 
 parallel 'stacker config', ->
@@ -63,3 +81,10 @@ parallel 'stacker config', ->
     , (stacker) ->
       stacker.send_cmd 'env'
       stacker.wait_for /config_argument=wonderful argument/
+
+  it 'throws an error when requiring an invalid stacker config', ->
+    with_stacker
+      cmd: ''
+      stacker_config: stacker_config_invalid
+    , (stacker) ->
+      stacker.wait_for /Error: Could not require stacker config file/
