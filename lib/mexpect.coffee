@@ -45,9 +45,10 @@ create_callback_transform_stream = (expectation, cb) ->
 
   create_transform_stream (line) ->
     line = line.toString().replace(/\u001b\[\d{0,2}m/g, '')
-    if expectation.test? and expectation.test(line) or line.toString().indexOf?(expectation) > -1
+    if (expectation.test? and expectation.test(line)) or line.toString().indexOf(expectation) > -1
       data = expectation.exec?(line) ? [expectation]
       cb data
+    @push line
 
 clone_apply = (obj1, obj2) ->
   newObj = {}

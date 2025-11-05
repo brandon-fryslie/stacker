@@ -58,6 +58,10 @@ setup_keybindings = (repl) ->
 
 # Store and load command history from a file
 addHistory = (repl, filename, maxSize) ->
+  # Check if readline interface is available
+  unless repl.rli or repl.inputStream
+    return
+
   lastLine = null
   try
     # Get file info and at most maxSize of command history
@@ -65,27 +69,31 @@ addHistory = (repl, filename, maxSize) ->
     size = Math.min maxSize, stat.size
     # Read last `size` bytes from the file
     readFd = fs.openSync filename, 'r'
-    buffer = new Buffer(size)
+    buffer = Buffer.alloc(size)
     fs.readSync readFd, buffer, 0, size, stat.size - size
     # Set the history on the interpreter
-    repl.rli.history = buffer.toString().split('\n').reverse()
-    # If the history file was truncated we should pop off a potential partial line
-    repl.rli.history.pop() if stat.size > maxSize
-    # Shift off the final blank newline
-    repl.rli.history.shift() if repl.rli.history[0] is ''
-    repl.rli.historyIndex = -1
-    lastLine = repl.rli.history[0]
+    rli = repl.rli ? repl
+    if rli.history?
+      rli.history = buffer.toString().split('\n').reverse()
+      # If the history file was truncated we should pop off a potential partial line
+      rli.history.pop() if stat.size > maxSize
+      # Shift off the final blank newline
+      rli.history.shift() if rli.history[0] is ''
+      rli.historyIndex = -1
+      lastLine = rli.history[0]
   catch e
 
   fd = fs.openSync filename, 'a'
 
-  repl.rli.addListener 'line', (code) ->
-    if code and code.length and code isnt 'history' and lastLine isnt code
-      # Save the latest command in the file
-      fs.write fd, "#{code}\n"
-      lastLine = code
+  rli = repl.rli ? repl
+  if rli.addListener?
+    rli.addListener 'line', (code) ->
+      if code and code.length and code isnt 'history' and lastLine isnt code
+        # Save the latest command in the file
+        fs.write fd, "#{code}\n"
+        lastLine = code
 
-  repl.rli.on 'exit', -> fs.close fd
+    rli.on 'exit', -> fs.close fd
 
 getCommandId = (repl, commandName) ->
   # Node 0.11 changed API, a command such as '.help' is now stored as 'help'

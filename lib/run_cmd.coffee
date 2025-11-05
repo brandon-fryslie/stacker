@@ -58,7 +58,7 @@ module.exports.run_cmd =
     proc_lib.add_proc child_id, mproc.proc
 
     if pipe_output
-      util.prefix_pipe_output child_id, mproc.proc
+      util.prefix_pipe_output child_id, mproc
 
     if close_stdin
       mproc.proc.stdin.end()
