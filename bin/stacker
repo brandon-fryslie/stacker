@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-require('coffee-script/register');
-require('es6-promise').polyfill();
+require('coffeescript/register');
 require('colors');
 
 process.on('uncaughtException', function(error) {

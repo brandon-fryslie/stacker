@@ -32,7 +32,8 @@ with_stacker = (opt, fn) ->
   # Create stacker config path
   dirPath = temp.mkdirSync()
   fs.mkdirSync("#{dirPath}/tasks")
-  fs.writeFileSync "#{dirPath}/config.coffee", opt.stacker_config
+  if opt.stacker_config?
+    fs.writeFileSync "#{dirPath}/config.coffee", opt.stacker_config
 
   # Setup stacker config path
   opt.env ?= {}
@@ -41,7 +42,8 @@ with_stacker = (opt, fn) ->
   # Setup task configs
   if !_.isEmpty opt.task_config
     for name, config of opt.task_config
-      fs.writeFileSync "#{dirPath}/tasks/#{name}.coffee", config
+      if config?
+        fs.writeFileSync "#{dirPath}/tasks/#{name}.coffee", config
 
   stacker = new Stacker opt.cmd, opt.env
   fn(stacker).then ->

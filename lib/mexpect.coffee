@@ -1,5 +1,3 @@
-require('es6-promise').polyfill()
-
 child_process = require 'child_process'
 stream = require 'stream'
 _ = require 'lodash'
